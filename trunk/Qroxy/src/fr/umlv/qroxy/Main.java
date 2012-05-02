@@ -18,20 +18,32 @@ package fr.umlv.qroxy;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.text.ParseException;
+import java.util.Scanner;
 
 /**
  *
  * @author joan
  */
 public class Main {
-    
-    public static void main(String[] args) throws IOException {
+
+    public static void main(String[] args) throws IOException, MalformedHttpHeaderException, MalformedURLException, ParseException {        
         ServerSocketChannel server = ServerSocketChannel.open();
+        server.bind(new InetSocketAddress("127.0.0.1", 7777));
+
+        SocketChannel clientSocket = server.accept();
+
+        Scanner scanner = new Scanner(clientSocket);
+        HttpHeader httpHeader = new HttpHeader(scanner);
         
-        server.socket().bind(new InetSocketAddress("127.0.0.1", 7777));
-        
-        SocketChannel socket = server.accept();
+        String host = httpHeader.getUrl().getHost();
+        int port = httpHeader.getUrl().getPort();
+        SocketChannel serverSocket = SocketChannel.open(new InetSocketAddress(host, port));
+
+        new Thread(new Forwarder(clientSocket, serverSocket)).start();
+        new Thread(new Forwarder(serverSocket, clientSocket)).start();
     }
 }
