@@ -16,8 +16,13 @@
  */
 package fr.umlv.qroxy.webui;
 
-import fr.umlv.qroxy.conf.Config;
+import java.io.IOException;
+import java.net.SocketAddress;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.Set;
 
 /**
  * 
@@ -25,23 +30,33 @@ import java.nio.channels.ServerSocketChannel;
  */
 public class Server {
 
-    private final Config config;
+    private final SocketAddress bindAddress;
 
-    public Server(Config config) {
-        this.config = config;
+    public Server(SocketAddress bindAddress) {
+        this.bindAddress = bindAddress;
+    }
+    
+    public void launch() throws IOException {
+        ServerSocketChannel serverSocket = ServerSocketChannel.open();
+        serverSocket.configureBlocking(false);
+        serverSocket.bind(bindAddress);
         
+        Selector selector = Selector.open();
+        Set<SelectionKey> selectedKeys = selector.selectedKeys();
+        serverSocket.register(selector, SelectionKey.OP_ACCEPT);
+        
+        selector.select();
+        
+        for (SelectionKey key : selectedKeys) {
+            if(key.isAcceptable()) {
+                SocketChannel client = serverSocket.accept();
+                client.configureBlocking(false);
+                client.register(selector, SelectionKey.OP_READ);
+            }
+            
+        }
     }
     
-    /**
-     * 
-     */
-    public void launch() {
-        ServerSocketChannel serverSocket;
-    }
-    
-    /**
-     * 
-     */
     public void stop() {
         
     } 
