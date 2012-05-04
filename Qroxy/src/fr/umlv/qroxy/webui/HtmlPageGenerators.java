@@ -20,6 +20,11 @@ package fr.umlv.qroxy.webui;
  *
  * @author joan
  */
-public class HtmlPageGenerator {
-    
+public class HtmlPageGenerators {
+    public static String getConfigPage() {
+        return "HTTP/1.0 200 Found\r\n"
+                + "Content-Length: 3\r\n"
+                + "\r\n"
+                + "gtf\r\n";
+    }
 }

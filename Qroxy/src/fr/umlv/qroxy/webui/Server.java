@@ -17,12 +17,16 @@
 package fr.umlv.qroxy.webui;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * 
@@ -31,33 +35,69 @@ import java.util.Set;
 public class Server {
 
     private final SocketAddress bindAddress;
+    private ServerSocketChannel serverSocket;
 
     public Server(SocketAddress bindAddress) {
         this.bindAddress = bindAddress;
     }
-    
+
     public void launch() throws IOException {
-        ServerSocketChannel serverSocket = ServerSocketChannel.open();
+        serverSocket = ServerSocketChannel.open();
         serverSocket.configureBlocking(false);
         serverSocket.bind(bindAddress);
-        
+
         Selector selector = Selector.open();
         Set<SelectionKey> selectedKeys = selector.selectedKeys();
         serverSocket.register(selector, SelectionKey.OP_ACCEPT);
-        
-        selector.select();
-        
-        for (SelectionKey key : selectedKeys) {
-            if(key.isAcceptable()) {
-                SocketChannel client = serverSocket.accept();
-                client.configureBlocking(false);
-                client.register(selector, SelectionKey.OP_READ);
+
+        while (serverSocket.isOpen()) {
+            selector.select(1000);
+            try {
+                for (SelectionKey key : selectedKeys) {
+                    if (key.isAcceptable()) {
+                        SocketChannel client = ((ServerSocketChannel) key.channel()).accept();
+                        client.configureBlocking(false);
+                        ByteBuffer buffer = ByteBuffer.wrap(HtmlPageGenerators.getConfigPage().getBytes());
+                        client.register(selector, SelectionKey.OP_WRITE, buffer);
+                    }
+
+                    if (key.isValid() && key.isWritable()) {
+                        SocketChannel channel = (SocketChannel) key.channel();
+                        ByteBuffer buffer = (ByteBuffer) key.attachment();
+                        channel.write(buffer);
+
+                        if (buffer.remaining() == 0) {
+                            channel.close();
+                        }
+                    }
+                }
+            } finally {
+                selectedKeys.clear();
             }
-            
         }
     }
-    
-    public void stop() {
+
+    public void stop() throws IOException {
+        serverSocket.close();
+    }
+
+    public static void main(String[] args) throws IOException {
+        final Server webui = new Server(new InetSocketAddress(7777));
+
+        new Timer().schedule(new TimerTask() {
+
+            @Override
+            public void run() {
+                try {
+                    webui.stop();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+                System.out.println("Arrete");
+            }
+        }, 10000);
         
-    } 
+        webui.launch();
+        System.out.println("Ceeeeee bon c arrete");
+    }
 }
