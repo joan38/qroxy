@@ -17,7 +17,11 @@
 package fr.umlv.qroxy.conf;
 
 import java.io.File;
-import java.net.InetSocketAddress;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 /**
  * Objet représentant les config
@@ -27,14 +31,102 @@ import java.net.InetSocketAddress;
  * @author joan
  */
 public class Config {
-    
-    private final File confFile;
-    private final InetSocketAddress bindingAddress;
 
-    public Config(File confFile, InetSocketAddress bindingAddress) {
+    private final File confFile;
+    private String webUiBindingAddress;
+    private int webUiBindingPort;
+    private List<QosRule> qosRules;
+    private List<CacheRule> cacheRules;
+
+    public Config(File confFile) throws FileNotFoundException {
         this.confFile = confFile;
-        this.bindingAddress = bindingAddress;
+
+        Scanner scanner = new Scanner(confFile);
+        while (scanner.hasNext()) {
+            String line = scanner.nextLine();
+            String[] split = line.split(" ");
+
+            if (line.equals("")) {
+                continue;
+            }
+
+            switch (split[0]) {
+                case "Webui-binding-address:":
+                    if (split.length != 2) {
+                        webUiBindingAddress = null;
+                    } else {
+                    webUiBindingAddress = split[1];
+                    }
+                    break;
+                case "Webui-binding-port:":
+                    if (split.length != 2) {
+                        webUiBindingPort = 0;
+                    } else {
+                        webUiBindingPort = Integer.parseInt(split[1]);
+                    }
+                    break;
+                case "QoS:":
+                    qosRules = parseQos(scanner);
+                    break;
+                case "Cache:":
+                    cacheRules = parseCache(scanner);
+                    break;
+            }
+        }
     }
-    
-    
+
+    private static List<QosRule> parseQos(Scanner scanner) {
+        List<QosRule> qosRules = new ArrayList<>();
+
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            String[] split = line.split("( |\t)+");
+            
+            if (line.startsWith("#")) {
+                continue;
+            }
+            
+            if (split.length != 4) {
+                break;
+            }
+            
+            try {
+                qosRules.add(new QosRule(split[0], Integer.parseInt(split[1]), Integer.parseInt(split[2]), Integer.parseInt(split[3])));
+            } catch (NumberFormatException e) {
+                break;
+            }
+        }
+
+        return qosRules;
+    }
+
+    private static List<CacheRule> parseCache(Scanner scanner) {
+        List<CacheRule> cacheRules = new ArrayList<>();
+
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            String[] split = line.split("( |\t)+");
+            
+            if (line.startsWith("#")) {
+                continue;
+            }
+            
+            if (split.length != 2) {
+                break;
+            }
+            
+            try {
+                cacheRules.add(new CacheRule(split[0], Integer.parseInt(split[1])));
+            } catch (NumberFormatException e) {
+                break;
+            }
+        }
+
+        return cacheRules;
+    }
+
+    public static void main(String[] args) throws IOException {
+        //parseQos(new Scanner(Paths.get("/Users/joan/Desktop/conf.txt")));
+        Config config = new Config(new File("/Users/joan/Desktop/conf.txt"));
+    }
 }

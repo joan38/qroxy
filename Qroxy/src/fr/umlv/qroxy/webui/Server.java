@@ -25,8 +25,6 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * 
@@ -82,22 +80,7 @@ public class Server {
     }
 
     public static void main(String[] args) throws IOException {
-        final Server webui = new Server(new InetSocketAddress(7777));
-
-        new Timer().schedule(new TimerTask() {
-
-            @Override
-            public void run() {
-                try {
-                    webui.stop();
-                } catch (IOException ex) {
-                    ex.printStackTrace();
-                }
-                System.out.println("Arrete");
-            }
-        }, 10000);
-        
+        Server webui = new Server(new InetSocketAddress(7777));        
         webui.launch();
-        System.out.println("Ceeeeee bon c arrete");
     }
 }
