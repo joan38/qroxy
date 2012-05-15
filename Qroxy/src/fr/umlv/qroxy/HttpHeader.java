@@ -24,6 +24,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -33,14 +34,22 @@ public class HttpHeader {
 
     private Method method;
     private URL url;
-    private String cacheControl;      // Cache-Control: max-age=0
-    private Date ifModifiedSince;     // If-Modified-Since: Tue, 24 Apr 2012 03:09:33 GMT\r\n
+    private String cacheControl;          // Cache-Control: max-age=0
+    private Date ifModifiedSince;         // If-Modified-Since: Tue, 24 Apr 2012 03:09:33 GMT\r\n
+    private boolean keepAlive;            // Keep-Alive: close ou Keep-Alive
+    private String unparsedHeaderFields;
 
     public HttpHeader(Method method, URL url, String cacheControl, Date ifModifiedSince) {
         this.method = method;
         this.url = url;
         this.cacheControl = cacheControl;
         this.ifModifiedSince = ifModifiedSince;
+    }
+    
+    public HttpHeader(String httpHeader) {
+        Pattern.matches(httpHeader, httpHeader);
+        
+        
     }
 
     public HttpHeader(Scanner scanner) throws MalformedHttpHeaderException, MalformedURLException, ParseException {

@@ -16,25 +16,40 @@
  */
 package fr.umlv.qroxy;
 
-import java.nio.channels.SocketChannel;
+import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 
 /**
  *
  * @author joan
  */
-public class Forwarder implements Runnable {
-    
-    private final SocketChannel fromSocket;
-    private final SocketChannel toSocket;
+public class SocketConfig {
+    private ByteBuffer buffer;
+    private SelectionKey server;
+    private SelectionKey client;
 
-    public Forwarder(SocketChannel fromSocket, SocketChannel toChannel) {
-        this.fromSocket = fromSocket;
-        this.toSocket = toChannel;
+    public SocketConfig() {
+        buffer = ByteBuffer.allocate(4096);
+        buffer.flip();
     }
-    
-    @Override
-    public void run() {
-        throw new UnsupportedOperationException("Not supported yet.");
+
+    public void setClient(SelectionKey client) {
+        this.client = client;
     }
-    
+
+    public void setServer(SelectionKey server) {
+        this.server = server;
+    }
+
+    public ByteBuffer getBuffer() {
+        return buffer;
+    }
+
+    public SelectionKey getClient() {
+        return client;
+    }
+
+    public SelectionKey getServer() {
+        return server;
+    }
 }

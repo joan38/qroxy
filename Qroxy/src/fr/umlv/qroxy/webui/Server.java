@@ -50,6 +50,7 @@ public class Server {
 
         while (serverSocket.isOpen()) {
             selector.select(1000);
+            
             try {
                 for (SelectionKey key : selectedKeys) {
                     if (key.isAcceptable()) {
