@@ -16,13 +16,13 @@
  */
 package fr.umlv.qroxy;
 
-import java.io.IOException;
+import fr.umlv.qroxy.conf.Config;
+import gnu.getopt.Getopt;
+import gnu.getopt.LongOpt;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.InetSocketAddress;
-import java.net.MalformedURLException;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.text.ParseException;
-import java.util.Scanner;
+import java.net.SocketAddress;
 
 /**
  *
@@ -30,20 +30,59 @@ import java.util.Scanner;
  */
 public class Main {
 
-    public static void main(String[] args) throws IOException, MalformedHttpHeaderException, MalformedURLException, ParseException {        
-        ServerSocketChannel server = ServerSocketChannel.open();
-        server.bind(new InetSocketAddress("127.0.0.1", 7777));
+    public static void main(String[] args) {
+        Config config = null;
 
-        SocketChannel clientSocket = server.accept();
+        LongOpt[] longopts = new LongOpt[3];
+        longopts[0] = new LongOpt("config", LongOpt.REQUIRED_ARGUMENT, null, 'c');
 
-        Scanner scanner = new Scanner(clientSocket);
-        HttpHeader httpHeader = new HttpHeader(scanner);
-        
-        String host = httpHeader.getUrl().getHost();
-        int port = httpHeader.getUrl().getPort();
-        SocketChannel serverSocket = SocketChannel.open(new InetSocketAddress(host, port));
+        Getopt getopt = new Getopt("Qroxy", args, ":c:", longopts);
 
-        new Thread(new Forwarder(clientSocket, serverSocket)).start();
-        new Thread(new Forwarder(serverSocket, clientSocket)).start();
+        int c;
+        while ((c = getopt.getopt()) != -1) {
+            String arg = getopt.getOptarg();
+            switch (c) {
+                case 'c':
+                    try {
+                        config = new Config(new File(arg));
+                    } catch (FileNotFoundException e) {
+                        System.err.println("Not found config file " + e.getMessage() + "\n");
+                    }
+                    break;
+                case ':':
+                    System.out.println("You need an argument for option " + (char) getopt.getOptopt());
+                    break;
+                default:
+                    printUsage();
+            }
+        }
+
+        if (config == null || getopt.getOptind() == args.length) {
+            printUsage();
+        }
+
+        SocketAddress listeningAddress = null;
+        String hostPort = args[getopt.getOptind()];
+
+        try {
+            if (hostPort.contains(":")) {
+                String[] split = hostPort.split(":");
+                listeningAddress = new InetSocketAddress(split[0], Integer.parseInt(split[1]));
+            } else {
+                listeningAddress = new InetSocketAddress(Integer.parseInt(hostPort));
+            }
+        } catch (NumberFormatException e) {
+            System.err.println("Please give a number for the port !\n");
+            printUsage();
+        }
+
+        new QroxyServer(listeningAddress, config);// TODO: .launch();
+    }
+
+    private static void printUsage() {
+        System.err.println("Usage :\n"
+                + "--config=<config file> <listening host>:<listening port>\n"
+                + "-c <config file> <listening port>");
+        System.exit(-1);
     }
 }
