@@ -120,7 +120,7 @@ public class QroxyServer {
                 String data = decoder.decode(buffer).toString();
                 buffer.rewind();
 
-                if (data.contains("\r\n\r\n") || data.contains("\n\n")) {
+                if (data.contains("\r\n\r\n")) {
                     HttpHeader httpHeader = new HttpHeader(data);
                     URL url = httpHeader.getUrl();
                     SocketChannel serverChannel = SocketChannel.open();

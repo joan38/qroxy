@@ -43,11 +43,22 @@ public class HttpHeader {
         this.method = method;
         this.url = url;
         this.cacheControl = cacheControl;
-        this.ifModifiedSince = ifModifiedSince;
     }
     
     public HttpHeader(String httpHeader) {
-        Pattern.matches(httpHeader, httpHeader);
+        StringBuilder methodsRegex = new StringBuilder("(");
+        Method[] methods = Method.values();
+        for (Method m : methods) {
+            methodsRegex.append(m).append("|");
+        }
+        methodsRegex.deleteCharAt(methodsRegex.length() - 1);
+        methodsRegex.append(")");
+        
+        
+        
+        Pattern.matches(methodsRegex + " " + Pattern. + "\r\n"
+                + "\r\n"
+                + "\r\n", httpHeader);
         
         
     }
