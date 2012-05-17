@@ -24,7 +24,6 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Scanner;
-import java.util.regex.Pattern;
 
 /**
  *
@@ -36,16 +35,15 @@ public class HttpHeader {
     private URL url;
     private String cacheControl;          // Cache-Control: max-age=0
     private Date ifModifiedSince;         // If-Modified-Since: Tue, 24 Apr 2012 03:09:33 GMT\r\n
-    private boolean keepAlive;            // Keep-Alive: close ou Keep-Alive
-    private String unparsedHeaderFields;
+    private String unparsedHeader;
 
-    public HttpHeader(Method method, URL url, String cacheControl, Date ifModifiedSince) {
-        this.method = method;
-        this.url = url;
-        this.cacheControl = cacheControl;
+    private HttpHeader() {
     }
-    
-    public HttpHeader(String httpHeader) {
+
+    public static HttpHeader parse(String string) throws MalformedHttpHeaderException {
+        HttpHeader httpHeader = new HttpHeader();
+
+        // Verify if the header is right formated
         StringBuilder methodsRegex = new StringBuilder("(");
         Method[] methods = Method.values();
         for (Method m : methods) {
@@ -53,41 +51,61 @@ public class HttpHeader {
         }
         methodsRegex.deleteCharAt(methodsRegex.length() - 1);
         methodsRegex.append(")");
-        
-        
-        
-        Pattern.matches(methodsRegex + " " + Pattern. + "\r\n"
-                + "\r\n"
-                + "\r\n", httpHeader);
-        
-        
-    }
 
-    public HttpHeader(Scanner scanner) throws MalformedHttpHeaderException, MalformedURLException, ParseException {
+        if (!string.matches(methodsRegex + " http\\://[a-zA-Z0-9\\-\\.]{2,}\\.[a-zA-Z]{2,}(/[a-zA-Z0-9\\-\\.%]*)* HTTP/[0-1].[0-9]\r\n"
+                + "([a-zA-Z\\-]+: .+\r\n)*"
+                + "\r\n")) {
+            throw new MalformedHttpHeaderException("The HTTP header is malformed");
+        }
+
+        httpHeader.unparsedHeader = string;
+
+        Scanner scanner = new Scanner(string);
         String line = scanner.nextLine();
         String[] split = line.split(" ");
 
         // Method
-        String httpMethod = split[0];
-        if (Method.isSupported(httpMethod) == false) {
-            throw new MalformedHttpHeaderException("Unsupported method");
+        httpHeader.method = Method.valueOf(split[0]);
+        try {
+            // URL
+            httpHeader.url = new URL(split[1]);
+        } catch (MalformedURLException e) {
+            throw new MalformedHttpHeaderException("Unparsable URL", e);
         }
-        this.method = Method.valueOf(httpMethod);
 
-        // URL
-        url = new URL(split[1]);
-
+        // Header fields
         while (scanner.hasNextLine()) {
             line = scanner.nextLine();
             split = line.split(" ");
 
             switch (split[0]) {
                 case "Cache-Control:":
-                    cacheControl = split[1];
+                    httpHeader.cacheControl = split[1];
                 case "If-Modified-Since:":
-                    ifModifiedSince = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US).parse(line.substring(19));
+                    try {
+                        httpHeader.ifModifiedSince = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US).parse(line.substring(19));
+                    } catch (ParseException e) {
+                        throw new MalformedHttpHeaderException("Unparsable date", e);
+                    }
             }
         }
+
+        return httpHeader;
+    }
+
+    public boolean headerMatches(String regex) {
+        Scanner scanner = new Scanner(unparsedHeader);
+
+        // Avoid the first line (Ex: GET http://toto.com/ HTTP/1.1)
+        scanner.nextLine();
+
+        while (scanner.hasNextLine()) {
+            if (scanner.nextLine().matches(regex)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public Method getMethod() {
@@ -106,6 +124,7 @@ public class HttpHeader {
         return ifModifiedSince;
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (obj == null) {
             return false;
@@ -126,6 +145,7 @@ public class HttpHeader {
         return true;
     }
 
+    @Override
     public int hashCode() {
         int hash = 3;
         hash = 29 * hash + (this.method != null ? this.method.hashCode() : 0);
@@ -137,7 +157,7 @@ public class HttpHeader {
 
     public enum Method {
 
-        GET, POST;
+        GET, POST, OPTIONS, HEAD, PUT, DELETE, TRACE, CONNECT;
 
         public static boolean isSupported(String methodName) {
             try {

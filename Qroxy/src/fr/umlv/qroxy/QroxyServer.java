@@ -36,13 +36,12 @@ import java.util.Set;
  */
 public class QroxyServer {
 
-    private static Charset charset = Charset.forName("ISO-8859-1");
-    private static CharsetDecoder decoder = charset.newDecoder();
+    private static final Charset charset = Charset.forName("ISO-8859-1");
+    private static final CharsetDecoder decoder = charset.newDecoder();
     private final Config config;
     private final SocketAddress listeningAddress;
     private ServerSocketChannel serverSocket;
-    private Selector clientSelector;
-    private Selector serverSelector;
+    private Selector selector;
 
     public QroxyServer(SocketAddress bindAddress, Config config) {
         this.listeningAddress = bindAddress;
@@ -54,43 +53,43 @@ public class QroxyServer {
         server.configureBlocking(false);
         server.bind(listeningAddress);
 
-        clientSelector = Selector.open();
-        Set<SelectionKey> clientSelectedKeys = clientSelector.selectedKeys();
-        serverSocket.register(clientSelector, SelectionKey.OP_ACCEPT);
-
-        serverSelector = Selector.open();
-        Set<SelectionKey> serverSelectedKeys = serverSelector.selectedKeys();
+        selector = Selector.open();
+        Set<SelectionKey> selectedKeys = selector.selectedKeys();
+        serverSocket.register(selector, SelectionKey.OP_ACCEPT);
 
         while (serverSocket.isOpen()) {
-            clientSelector.select(1000);
-            serverSelector.select(1000); // TODO: A bouger dans une autre thread
+            selector.select();
 
             try {
-                for (SelectionKey key : clientSelectedKeys) {
+                for (SelectionKey key : selectedKeys) {
                     if (key.isAcceptable()) {
                         doAcceptNewClient(key);
-                    }
-
-                    if (key.isValid() && key.isReadable()) {
-                        doReadFromClient(key);
-                    }
-
-                    if (key.isValid() && key.isWritable()) {
-                        doWriteToClient(key);
-                    }
-                }
-
-                for (SelectionKey key : serverSelectedKeys) {
-                    if (key.isValid() && key.isReadable()) {
-                        doReadFromServer(key);
-                    }
-
-                    if (key.isValid() && key.isWritable()) {
-                        doWriteToServer(key);
+                    } else if (key.isConnectable()) {
+                        doConnectServer(key);
+                    } else if (!key.isValid()) {
+                        closeClientServer(key);
+                    } else if (key.isReadable()) {
+                        SocketConfig socketConfig = (SocketConfig) key.attachment();
+                        if (key == socketConfig.getClient()) {
+                            doReadFromClient(key);
+                        } else if (key == socketConfig.getServer()) {
+                            doReadFromServer(key);
+                        } else {
+                            throw new IOException("SelectionKey is neither a client or a server !");
+                        }
+                    } else if (key.isWritable()) {
+                        SocketConfig socketConfig = (SocketConfig) key.attachment();
+                        if (key == socketConfig.getClient()) {
+                            doWriteToClient(key);
+                        } else if (key == socketConfig.getServer()) {
+                            doWriteToServer(key);
+                        } else {
+                            throw new IOException("SelectionKey is neither a client or a server !");
+                        }
                     }
                 }
             } finally {
-                serverSelectedKeys.clear();
+                selectedKeys.clear();
             }
         }
     }
@@ -105,8 +104,20 @@ public class QroxyServer {
         }
     }
 
-    private void doReadFromClient(SelectionKey key) {
+    private void doConnectServer(SelectionKey key) {
+        SocketChannel channel = (SocketChannel) key.channel();
+        try {
+            if (channel.finishConnect()) {
+                key.interestOps(SelectionKey.OP_WRITE);
+                return;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        closeClientServer(key);
+    }
 
+    private void doReadFromClient(SelectionKey key) {
         SocketChannel channel = (SocketChannel) key.channel();
         SocketConfig socketConfig = (SocketConfig) key.attachment();
         ByteBuffer buffer = socketConfig.getBuffer();
@@ -121,11 +132,11 @@ public class QroxyServer {
                 buffer.rewind();
 
                 if (data.contains("\r\n\r\n")) {
-                    HttpHeader httpHeader = new HttpHeader(data);
+                    HttpHeader httpHeader = HttpHeader.parse(data);
                     URL url = httpHeader.getUrl();
                     SocketChannel serverChannel = SocketChannel.open();
                     serverChannel.connect(new InetSocketAddress(url.getHost(), url.getPort()));
-                    SelectionKey keyServer = serverChannel.register(serverSelector, SelectionKey.OP_WRITE, socketConfig);
+                    SelectionKey keyServer = serverChannel.register(selector, SelectionKey.OP_CONNECT, socketConfig);
                     socketConfig.setServer(keyServer);
                 } else if (nbReaded == -1) {
                     channel.close();
@@ -135,16 +146,7 @@ public class QroxyServer {
             }
         } catch (IOException e) {
             e.printStackTrace();
-
-            try {
-                key.channel().close();
-                SelectionKey server = socketConfig.getServer();
-                if (server != null) {
-                    server.channel().close();
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            closeClientServer(key);
         }
     }
 
@@ -161,13 +163,7 @@ public class QroxyServer {
             }
         } catch (IOException e) {
             e.printStackTrace();
-
-            try {
-                key.channel().close();
-                socketConfig.getClient().channel().close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            closeClientServer(key);
         }
     }
 
@@ -186,13 +182,7 @@ public class QroxyServer {
             }
         } catch (IOException e) {
             e.printStackTrace();
-
-            try {
-                key.channel().close();
-                socketConfig.getClient().channel().close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            closeClientServer(key);
         }
     }
 
@@ -209,20 +199,26 @@ public class QroxyServer {
             }
         } catch (IOException e) {
             e.printStackTrace();
+            closeClientServer(key);
+        }
+    }
 
-            try {
-                key.channel().close();
-                SelectionKey server = socketConfig.getServer();
-                if (server != null) {
-                    server.channel().close();
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
+    private void closeClientServer(SelectionKey key) {
+        try {
+            SocketConfig socketConfig = (SocketConfig) key.attachment();
+
+            socketConfig.getClient().channel().close();
+            SelectionKey serverKey = socketConfig.getServer();
+            if (serverKey != null) {
+                serverKey.channel().close();
             }
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 
     public void stop() throws IOException {
         serverSocket.close();
+        selector.wakeup();
     }
 }
