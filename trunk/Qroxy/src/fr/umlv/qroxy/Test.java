@@ -16,27 +16,21 @@
  */
 package fr.umlv.qroxy;
 
-import java.io.IOException;
+import java.util.regex.Pattern;
 
 /**
  *
  * @author joan
  */
-public class MalformedHttpHeaderException extends IOException {
-
-    public MalformedHttpHeaderException() {
-        super();
-    }
-    
-    MalformedHttpHeaderException(String string) {
-        super(string);
-    }
-
-    public MalformedHttpHeaderException(Throwable cause) {
-        super(cause);
-    }
-
-    public MalformedHttpHeaderException(String message, Throwable cause) {
-        super(message, cause);
+public class Test {
+    public static void main(String[] args) {
+        String httpHeader = "GERT http://www.google.fr/ou%20e.php/ HTTP/1.1\r\n"
+                + "Connection: Keep-Alive\r\n"
+                + "Toto: oui\r\n"
+                + "\r\n";
+        boolean matches = Pattern.matches("(GET|POST) http\\://[a-zA-Z0-9\\-\\.]{2,}\\.[a-zA-Z]{2,}(/[a-zA-Z0-9\\-\\.%]*)* HTTP/[0-1].[0-9]\r\n"
+                                  + "([a-zA-Z\\-]+: .+\r\n)*"
+                                  + "\r\n", httpHeader);
+        
     }
 }
