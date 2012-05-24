@@ -24,12 +24,12 @@ import java.nio.channels.SelectionKey;
  * @author joan
  */
 public class SocketConfig {
-    private ByteBuffer buffer;
-    private SelectionKey server;
+    private final ByteBuffer buffer;
     private SelectionKey client;
+    private SelectionKey server;
 
     public SocketConfig() {
-        buffer = ByteBuffer.allocate(4096);
+        buffer = ByteBuffer.allocate(8192);
         buffer.flip();
     }
 

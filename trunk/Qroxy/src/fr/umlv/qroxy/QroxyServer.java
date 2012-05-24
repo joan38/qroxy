@@ -40,7 +40,7 @@ public class QroxyServer {
     private static final CharsetDecoder decoder = charset.newDecoder();
     private final Config config;
     private final SocketAddress listeningAddress;
-    private ServerSocketChannel serverSocket;
+    private ServerSocketChannel server;
     private Selector selector;
 
     public QroxyServer(SocketAddress bindAddress, Config config) {
@@ -49,15 +49,15 @@ public class QroxyServer {
     }
 
     public void launch() throws IOException {
-        ServerSocketChannel server = ServerSocketChannel.open();
+        server = ServerSocketChannel.open();
         server.configureBlocking(false);
         server.bind(listeningAddress);
 
         selector = Selector.open();
         Set<SelectionKey> selectedKeys = selector.selectedKeys();
-        serverSocket.register(selector, SelectionKey.OP_ACCEPT);
+        server.register(selector, SelectionKey.OP_ACCEPT);
 
-        while (serverSocket.isOpen()) {
+        while (server.isOpen()) {
             selector.select();
 
             try {
@@ -98,7 +98,8 @@ public class QroxyServer {
         SocketChannel client = ((ServerSocketChannel) key.channel()).accept();
         try {
             client.configureBlocking(false);
-            client.register(key.selector(), SelectionKey.OP_READ, new SocketConfig());
+            SocketConfig socketConfig = new SocketConfig();
+            socketConfig.setClient(client.register(key.selector(), SelectionKey.OP_READ, socketConfig));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -218,7 +219,7 @@ public class QroxyServer {
     }
 
     public void stop() throws IOException {
-        serverSocket.close();
+        server.close();
         selector.wakeup();
     }
 }

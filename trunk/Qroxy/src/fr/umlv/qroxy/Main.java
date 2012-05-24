@@ -21,6 +21,7 @@ import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 
@@ -30,7 +31,7 @@ import java.net.SocketAddress;
  */
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Config config = null;
 
         LongOpt[] longopts = new LongOpt[3];
@@ -76,7 +77,7 @@ public class Main {
             printUsage();
         }
 
-        new QroxyServer(listeningAddress, config);// TODO: .launch();
+        new QroxyServer(listeningAddress, config).launch();
     }
 
     private static void printUsage() {
