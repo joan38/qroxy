@@ -14,42 +14,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy;
+package fr.umlv.qroxy.http;
 
-import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
+import java.io.IOException;
 
 /**
  *
  * @author joan
  */
-public class SocketConfig {
-    private final ByteBuffer buffer;
-    private SelectionKey client;
-    private SelectionKey server;
+public class MalformedHttpHeaderException extends IOException {
 
-    public SocketConfig() {
-        buffer = ByteBuffer.allocate(8192);
-        buffer.flip();
+    public MalformedHttpHeaderException() {
+        super();
+    }
+    
+    MalformedHttpHeaderException(String string) {
+        super(string);
     }
 
-    public void setClient(SelectionKey client) {
-        this.client = client;
+    public MalformedHttpHeaderException(Throwable cause) {
+        super(cause);
     }
 
-    public void setServer(SelectionKey server) {
-        this.server = server;
-    }
-
-    public ByteBuffer getBuffer() {
-        return buffer;
-    }
-
-    public SelectionKey getClient() {
-        return client;
-    }
-
-    public SelectionKey getServer() {
-        return server;
+    public MalformedHttpHeaderException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

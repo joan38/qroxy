@@ -14,84 +14,34 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy;
+package fr.umlv.qroxy.http;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.Scanner;
 
 /**
  *
  * @author joan
  */
-public class HttpHeaderV2 {
+public class HttpHeaderOld {
 
     private Method method;
     private URL url;
-    private HashMap<String, String> headerFields = new HashMap<>();
+    private String cacheControl;          // Cache-Control: max-age=0
+    private Date ifModifiedSince;         // If-Modified-Since: Tue, 24 Apr 2012 03:09:33 GMT\r\n
+    private String unparsedHeader;
 
-    /**
-     * Lazy loading regex of supported POI types
-     */
-    private static class Regex {
-
-        private static String supportedHttpMethod;
-        private static final String supportedHttpVersion;
-
-        static {
-            StringBuilder methodsRegex = new StringBuilder("(");
-            Method[] methods = Method.values();
-            for (Method m : methods) {
-                methodsRegex.append(m).append("|");
-            }
-            methodsRegex.deleteCharAt(methodsRegex.length() - 1);
-            methodsRegex.append(")");
-            supportedHttpMethod = methodsRegex.toString();
-        }
+    private HttpHeaderOld() {
     }
 
-    private HttpHeaderV2() {
-    }
-
-    public Date getIfModifiedSince() {
-        // If-Modified-Since: Tue, 24 Apr 2012 03:09:33 GMT\r\n
-        String ifModifiedSince = headerFields.get("If-Modified-Since");
-        if (!ifModifiedSince.matches("")) {
-            return null;
-        }
-        try {
-            return new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US).parse(ifModifiedSince);
-        } catch (ParseException e) {
-            return null;
-        }
-    }
-
-    public static HttpHeaderV2 parse(String string) throws MalformedHttpHeaderException {
-        HttpHeaderV2 httpHeader = new HttpHeaderV2();
-
-        StringTokenizer stringTokenizer = new StringTokenizer(string);
-        String nextToken = stringTokenizer.nextToken();
-        if (nextToken.matches(Regex.supportedHttpMethod)) { // NoSuchElementException
-            // 5.1 Request-Line (RFC 2616)
-        } else if (nextToken.matches()) {
-            // 6.1 Status-Line (RFC 2616)
-        } else {
-            throw new MalformedHttpHeaderException("The HTTP header is malformed");
-        }
-
-
-        
-        if () {
-        }
-
-        
-
-
-
+    public static HttpHeaderOld parse(String string) throws MalformedHttpHeaderException {
+        HttpHeaderOld httpHeader = new HttpHeaderOld();
 
         // Verify if the header is right formated
         StringBuilder methodsRegex = new StringBuilder("(");
@@ -107,6 +57,8 @@ public class HttpHeaderV2 {
                 + "\r\n")) {
             throw new MalformedHttpHeaderException("The HTTP header is malformed");
         }
+
+        httpHeader.unparsedHeader = string;
 
         Scanner scanner = new Scanner(string);
         String line = scanner.nextLine();
@@ -180,7 +132,7 @@ public class HttpHeaderV2 {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final HttpHeaderV2 other = (HttpHeaderV2) obj;
+        final HttpHeaderOld other = (HttpHeaderOld) obj;
         if (this.method != other.method) {
             return false;
         }
