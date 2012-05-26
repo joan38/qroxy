@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Joan Goyeau & Guillaume Demurger
+ * Copyright (C) 2012 Joan Goyeau <joan.goyeau@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,29 +14,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy;
-
-import java.io.IOException;
+package fr.umlv.qroxy.http;
 
 /**
  *
- * @author joan
+ * @author Joan Goyeau <joan.goyeau@gmail.com>
  */
-public class MalformedHttpHeaderException extends IOException {
+public enum HttpMethod {
+    GET, POST, OPTIONS, HEAD, PUT, DELETE, TRACE, CONNECT;
 
-    public MalformedHttpHeaderException() {
-        super();
+    public static boolean isSupported(String methodName) {
+        try {
+            HttpMethod.valueOf(methodName);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+        return true;
     }
     
-    MalformedHttpHeaderException(String string) {
-        super(string);
-    }
-
-    public MalformedHttpHeaderException(Throwable cause) {
-        super(cause);
-    }
-
-    public MalformedHttpHeaderException(String message, Throwable cause) {
-        super(message, cause);
-    }
 }

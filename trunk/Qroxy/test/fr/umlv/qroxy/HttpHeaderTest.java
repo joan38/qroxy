@@ -16,7 +16,8 @@
  */
 package fr.umlv.qroxy;
 
-import fr.umlv.qroxy.HttpHeader.Method;
+import fr.umlv.qroxy.http.MalformedHttpHeaderException;
+import fr.umlv.qroxy.http.HttpHeaderOld.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.ParseException;
