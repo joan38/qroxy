@@ -230,7 +230,10 @@ public abstract class HttpHeader {
         }
     }
 
-//    public boolean headerMatches(String regex) {
+//    public boolean headerMatches(, String regex) {
+//        
+//        
+//        
 //        Scanner scanner = new Scanner(unparsedHeader);
 //
 //        // Avoid the first line (Ex: GET http://toto.com/ HTTP/1.1)
