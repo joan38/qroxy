@@ -16,14 +16,18 @@
  */
 package fr.umlv.qroxy;
 
-import fr.umlv.qroxy.conf.Config;
+import fr.umlv.qroxy.config.Config;
+import fr.umlv.qroxy.config.XMLQroxyConfigException;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -31,7 +35,7 @@ import java.net.SocketAddress;
  */
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         Config config = null;
 
         LongOpt[] longopts = new LongOpt[3];
@@ -45,9 +49,9 @@ public class Main {
             switch (c) {
                 case 'c':
                     try {
-                        config = new Config(new File(arg));
-                    } catch (FileNotFoundException e) {
-                        System.err.println("Not found config file " + e.getMessage() + "\n");
+                        config = Config.loadFromXml(new File(arg));
+                    } catch (XMLQroxyConfigException e) {
+                        System.err.println(e.getMessage());
                     }
                     break;
                 case ':':
@@ -76,8 +80,11 @@ public class Main {
             System.err.println("Please give a number for the port !\n");
             printUsage();
         }
-
-        new QroxyServer(listeningAddress, config).launch();
+        try {
+            new QroxyServer(listeningAddress, config).launch();
+        } catch (IOException e) {
+            System.err.println("Proxy stopped due to a network error: " + e.getMessage());
+        }
     }
 
     private static void printUsage() {

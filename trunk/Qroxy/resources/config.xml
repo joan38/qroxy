@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<qroxyConfig version="1.0">
+    <webUi>
+        <bindAddress></bindAddress>
+        <bindPort>777</bindPort>
+    </webUi>
+    <cache>
+        <path>~/Desktop/cache</path>
+    </cache>
+    <categories>
+        <category name="test">
+            <regexs>
+                <regex applyOn="url">dfgf</regex>
+                <regex applyOn="Content-Length">0</regex>
+            </regexs>
+            <qosRule>
+                <maxSpeed>100</maxSpeed>
+                <priority>2</priority>
+            </qosRule>
+            <cacheRule>
+                <maxSize>1000</maxSize>
+            </cacheRule>
+        </category>
+    </categories>
+</qroxyConfig>

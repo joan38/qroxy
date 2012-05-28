@@ -16,8 +16,7 @@
  */
 package fr.umlv.qroxy;
 
-import fr.umlv.qroxy.http.HttpHeaderOld;
-import fr.umlv.qroxy.conf.Config;
+import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import java.io.IOException;
 import java.net.InetSocketAddress;

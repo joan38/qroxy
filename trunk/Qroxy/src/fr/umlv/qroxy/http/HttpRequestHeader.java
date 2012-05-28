@@ -16,16 +16,13 @@
  */
 package fr.umlv.qroxy.http;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.StringTokenizer;
-import sun.net.www.protocol.http.HttpURLConnection;
 
 /**
  * ava.net.URI; import java.net.URISyntaxException; import java.net.URL; import
