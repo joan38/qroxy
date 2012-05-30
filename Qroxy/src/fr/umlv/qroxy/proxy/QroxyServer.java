@@ -75,11 +75,11 @@ public class QroxyServer {
                     } else if (!key.isValid()) {
                         closeClientServer(key);
                     } else if (key.isReadable()) {
-                        SocketAttachment socketConfig = (SocketAttachment) key.attachment();
-                        if (key == socketConfig.getClient()) {
+                        SocketAttachment socketAttachment = (SocketAttachment) key.attachment();
+                        if (key == socketAttachment.getClient()) {
                             doReadFromClient(key);
                             System.out.println("Read from client");
-                        } else if (key == socketConfig.getServer()) {
+                        } else if (key == socketAttachment.getServer()) {
                             doReadFromServer(key);
                             System.out.println("Read from server");
                         } else {

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <qroxyConfig version="1.0">
     <webUi>
-        <bindAddress></bindAddress>
+        <!-- <bindAddress></bindAddress> -->
         <bindPort>777</bindPort>
     </webUi>
     <cache>

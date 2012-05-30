@@ -752,6 +752,7 @@ public enum HttpStatusCode {
     public String getHttpResponse() {
         return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
                 + "Date: " + dateFormater.format(new Date())
+                + "Server: Qroxy"
                 + "Connection: close\r\n"
                 + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
                 + "\r\n"

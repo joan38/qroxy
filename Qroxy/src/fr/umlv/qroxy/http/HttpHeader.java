@@ -33,6 +33,7 @@ import java.util.*;
 public abstract class HttpHeader {
 
     protected final static SimpleDateFormat dateFormater = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+    protected String stringHeader;
     protected int headerLength;
     ContentTransferMethod contentTransferMethod;
     /**
