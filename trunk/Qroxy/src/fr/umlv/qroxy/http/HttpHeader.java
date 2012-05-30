@@ -16,6 +16,9 @@
  */
 package fr.umlv.qroxy.http;
 
+import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
+import fr.umlv.qroxy.http.exceptions.HttpPreconditionFailedException;
+import fr.umlv.qroxy.http.exceptions.HttpUnsupportedVersionException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -30,6 +33,8 @@ import java.util.*;
 public abstract class HttpHeader {
 
     protected final static SimpleDateFormat dateFormater = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+    protected int headerLength;
+    ContentTransferMethod contentTransferMethod;
     /**
      * <b>HTTP Version (see section 3.1 in RFC 2616)
      */
@@ -58,7 +63,7 @@ public abstract class HttpHeader {
     protected String allow;
     protected String contentEncoding;
     protected String contentLanguage;
-    protected int contentLength;
+    protected Integer contentLength;
     protected String contentLocation;
     protected String contentMD5;
     protected String contentRange;
@@ -67,7 +72,7 @@ public abstract class HttpHeader {
     protected Date lastModified;
     /**
      * <b>extension-header (see section 7.1 in RFC 2616)</b><p>
-     * 
+     *
      * The extension-header mechanism allows additional entity-header fields to
      * be defined without changing the protocol, but these fields cannot be
      * assumed to be recognizable by the recipient. Unrecognized header fields
@@ -79,46 +84,39 @@ public abstract class HttpHeader {
     protected HttpHeader() {
     }
 
-    public static HttpHeader parse(String httpMessage) throws MalformedHttpHeaderException {
+    public static HttpHeader parse(String httpMessage) throws HttpMalformedHeaderException {
         Objects.requireNonNull(httpMessage);
 
-        // Cut the message body
-        httpMessage = httpMessage.substring(0, httpMessage.indexOf("\r\n\r\n"));
-
         HttpHeader httpHeader;
-
+        StringTokenizer stringTokenizer = new StringTokenizer(httpMessage);
         try {
-            StringTokenizer stringTokenizer = new StringTokenizer(httpMessage);
             String nextToken = stringTokenizer.nextToken();
             if (HttpMethod.isSupported(nextToken)) {
                 // Request (see section 5 in RFC 2616)
                 httpHeader = HttpRequestHeader.parse(httpMessage);
-            } else if (stringTokenizer.nextToken("/").equals("HTTP")) {
+            } else {
+                parseVersion(nextToken);
                 // Response (see section 6 in RFC 2616)
                 httpHeader = HttpResponseHeader.parse(httpMessage);
-            } else {
-                throw new MalformedHttpHeaderException("Unsupported HTTP version (see section 3.1 in RFC 2616)");
             }
+        } catch (HttpMalformedHeaderException e) {
+            throw new HttpMalformedHeaderException("Unsupported HTTP header (see section 4 in RFC 2616)");
         } catch (NoSuchElementException e) {
-            throw new MalformedHttpHeaderException("Unexpected end of the header (see section 4 in RFC 2616)", e);
+            throw new HttpMalformedHeaderException("Unexpected end of the header (see section 4 in RFC 2616)", e);
         }
 
         return httpHeader;
     }
 
-    protected void parseVersion(StringTokenizer stringTokenizer) throws MalformedHttpHeaderException {
-        Objects.requireNonNull(stringTokenizer);
+    protected static HttpVersion parseVersion(String string) throws HttpUnsupportedVersionException {
+        Objects.requireNonNull(string);
+        StringTokenizer stringTokenizer = new StringTokenizer(string);
 
-        try {
-            int major = Integer.parseInt(stringTokenizer.nextToken(".").substring(1));
-            int minor = Integer.parseInt(stringTokenizer.nextToken(" \t\n\r\f").substring(1));
-            version = HttpVersion.valueFor(major, minor);
-            if (version == null) {
-                throw new MalformedHttpHeaderException("Unsupported HTTP version (see section 3.1 in RFC 2616)");
-            }
-        } catch (NumberFormatException e) {
-            throw new MalformedHttpHeaderException("Invalid HTTP version number (see section 3.1 in RFC 2616)", e);
+        HttpVersion version = HttpVersion.valueFor(stringTokenizer.nextToken());
+        if (version == null) {
+            throw new HttpUnsupportedVersionException("Unsupported HTTP version (see section 3.1 in RFC 2616)");
         }
+        return version;
     }
 
     /**
@@ -128,42 +126,40 @@ public abstract class HttpHeader {
      * @param fieldValue
      * @return
      */
-    protected boolean setGeneralHeaderField(String fieldName, String fieldValue) throws MalformedHttpHeaderException {
-        HttpGeneralHeaderField generalHeaderField = HttpGeneralHeaderField.valueFor(fieldName);
-        if (generalHeaderField == null) {
-            return false;
-        }
-        
-        switch (generalHeaderField) {
-            case CACHE_CONTROL:
+    protected boolean setGeneralHeaderField(String fieldName, String fieldValue) throws HttpMalformedHeaderException {
+        Objects.requireNonNull(fieldName);
+        Objects.requireNonNull(fieldValue);
+
+        switch (fieldName) {
+            case "Cache-Control":
                 cacheControl = fieldValue;
                 return true;
-            case CONNECTION:
+            case "Connection":
                 connection = fieldValue;
                 return true;
-            case DATE:
+            case "Date":
                 try {
                     date = dateFormater.parse(fieldValue);
                 } catch (ParseException e) {
-                    throw new MalformedHttpHeaderException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
+                    throw new HttpPreconditionFailedException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
                 }
                 return true;
-            case PRAGMA:
+            case "Pragma":
                 pragma = fieldValue;
                 return true;
-            case TRAILER:
+            case "Trailer":
                 trailer = fieldValue;
                 return true;
-            case TRANSFER_ENCODING:
+            case "Transfer-Encoding":
                 transferEncoding = fieldValue;
                 return true;
-            case UPGRADE:
+            case "Upgrade":
                 upgrade = fieldValue;
                 return true;
-            case VIA:
+            case "Via":
                 via = fieldValue;
                 return true;
-            case WARNING:
+            case "Warning":
                 warning = fieldValue;
                 return true;
             default:
@@ -178,76 +174,72 @@ public abstract class HttpHeader {
      * @param fieldValue
      * @return
      */
-    protected void setEntityHeaderField(String fieldName, String fieldValue) throws MalformedHttpHeaderException {
-        HttpEntityHeaderField entityHeaderField = HttpEntityHeaderField.valueFor(fieldName);
-        if (entityHeaderField == null) {
-            extensionHeader.put(fieldName, fieldValue);
-            return;
-        }
+    protected void setEntityHeaderField(String fieldName, String fieldValue) throws HttpMalformedHeaderException {
+        Objects.requireNonNull(fieldName);
+        Objects.requireNonNull(fieldValue);
 
-        switch (entityHeaderField) {
-            case ALLOW:
+        switch (fieldName) {
+            case "Allow":
                 allow = fieldValue;
                 return;
-            case CONTENT_ENCODING:
+            case "Content-Encoding":
                 contentEncoding = fieldValue;
                 return;
-            case CONTENT_LANGUAGE:
+            case "Content-Language":
                 contentLanguage = fieldValue;
                 return;
-            case CONTENT_LENGTH:
+            case "Content-Length":
                 try {
-                contentLength = Integer.parseInt(fieldValue);
+                    contentLength = Integer.parseInt(fieldValue);
                 } catch (NumberFormatException e) {
-                    throw new MalformedHttpHeaderException("Invalid number format of the field " + fieldName + ": " + fieldValue, e);
+                    throw new HttpPreconditionFailedException("Invalid number format of the field " + fieldName + ": " + fieldValue, e);
                 }
                 return;
-            case CONTENT_LOCATION:
+            case "Content-Location":
                 contentLocation = fieldValue;
                 return;
-            case CONTENT_MD5:
+            case "Content-MD5":
                 contentMD5 = fieldValue;
                 return;
-            case CONTENT_RANGE:
+            case "Content-Range":
                 contentRange = fieldValue;
                 return;
-            case CONTENT_TYPE:
+            case "Content-Type":
                 contentType = fieldValue;
                 return;
-            case EXPIRES:
+            case "Expires":
                 try {
                     expires = dateFormater.parse(fieldValue);
                 } catch (ParseException e) {
-                    throw new MalformedHttpHeaderException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
+                    throw new HttpPreconditionFailedException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
                 }
                 return;
-            case LAST_MODIFIED:
+            case "Last-Modified":
                 try {
                     lastModified = dateFormater.parse(fieldValue);
                 } catch (ParseException e) {
-                    throw new MalformedHttpHeaderException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
+                    throw new HttpPreconditionFailedException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
                 }
+                return;
+            default:
+                extensionHeader.put(fieldName, fieldValue);
         }
     }
 
-//    public boolean headerMatches(, String regex) {
-//        
-//        
-//        
-//        Scanner scanner = new Scanner(unparsedHeader);
-//
-//        // Avoid the first line (Ex: GET http://toto.com/ HTTP/1.1)
-//        scanner.nextLine();
-//
-//        while (scanner.hasNextLine()) {
-//            if (scanner.nextLine().matches(regex)) {
-//                return true;
-//            }
-//        }
-//
-//        return false;
-//    }
-    
+    /**
+     * Method returning the content transfert method. This method is usefull to
+     * find the way to detect the end of a HTTP message.
+     *
+     * (see section 4.4 in RFC 2616)
+     *
+     * @return
+     */
+    abstract public ContentTransferMethod contentTransferMethod();
+
+    public int getHeaderLength() {
+        return headerLength;
+    }
+
     public String getAllow() {
         return allow;
     }
@@ -268,7 +260,7 @@ public abstract class HttpHeader {
         return contentLanguage;
     }
 
-    public int getContentLength() {
+    public Integer getContentLength() {
         return contentLength;
     }
 
@@ -302,7 +294,7 @@ public abstract class HttpHeader {
 
     /**
      * <b>extension-header (see section 7.1 in RFC 2616)</b><p>
-     * 
+     *
      * The extension-header mechanism allows additional entity-header fields to
      * be defined without changing the protocol, but these fields cannot be
      * assumed to be recognizable by the recipient. Unrecognized header fields

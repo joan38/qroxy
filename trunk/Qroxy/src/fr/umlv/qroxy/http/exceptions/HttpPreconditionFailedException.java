@@ -14,36 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy.http;
+package fr.umlv.qroxy.http.exceptions;
 
 /**
- * HTTP Version (see section 3.1 in RFC 2616)
- * 
+ *
  * @author Joan Goyeau <joan.goyeau@gmail.com>
  */
-public enum HttpVersion {
+public class HttpPreconditionFailedException extends HttpMalformedHeaderException {
 
-    /**
-     * HTTP version 1.1
-     */
-    HTTP_1_1("HTTP/1.1");
-    private String version;
-
-    private HttpVersion(String version) {
-        this.version = version;
+    public HttpPreconditionFailedException(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    public static HttpVersion valueFor(String version) {
-        for (HttpVersion httpVersion : HttpVersion.values()) {
-            if (httpVersion.version.equals(version)) {
-                return httpVersion;
-            }
-        }
-        return null;
+    public HttpPreconditionFailedException(Throwable cause) {
+        super(cause);
     }
-    
-    @Override
-    public String toString() {
-        return version;
+
+    public HttpPreconditionFailedException(String string) {
+        super(string);
+    }
+
+    public HttpPreconditionFailedException() {
+        super();
     }
 }

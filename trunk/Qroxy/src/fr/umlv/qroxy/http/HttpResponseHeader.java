@@ -16,6 +16,7 @@
  */
 package fr.umlv.qroxy.http;
 
+import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.StringTokenizer;
@@ -64,19 +65,19 @@ public class HttpResponseHeader extends HttpHeader {
      * @return
      * @throws MalformedHttpHeaderException
      */
-    public static HttpResponseHeader parse(String httpResponseMessage) throws MalformedHttpHeaderException {
+    public static HttpResponseHeader parse(String httpResponseMessage) throws HttpMalformedHeaderException {
         Objects.requireNonNull(httpResponseMessage);
+        HttpResponseHeader httpHeader = new HttpResponseHeader();
+
+        // Cut the message body
+        httpResponseMessage = httpResponseMessage.substring(0, httpResponseMessage.indexOf("\r\n\r\n"));
+        httpHeader.headerLength = httpResponseMessage.length() + 4;
         StringTokenizer stringTokenizer = new StringTokenizer(httpResponseMessage);
 
         // Status-Line (see section 6.1 in RFC 2616)
-        HttpResponseHeader httpHeader = new HttpResponseHeader();
-
         try {
             // HTTP-Version (see section 3.1 in RFC 2616)
-            if (!stringTokenizer.nextToken("/").equals("HTTP")) {
-                throw new MalformedHttpHeaderException("Invalid HTTP response header (see section 6.1 in RFC 2616)");
-            }
-            httpHeader.parseVersion(stringTokenizer);
+            httpHeader.version = parseVersion(stringTokenizer.nextToken());
 
             try {
                 // Status code (see section 6.1.1 in RFC 2616)
@@ -85,14 +86,16 @@ public class HttpResponseHeader extends HttpHeader {
                 if (httpHeader.statusCode == null) {
                     httpHeader.extensionStatusCode = statusCode;
                 }
+                // Avoid the status message
+                stringTokenizer.nextToken("\r\n");
             } catch (NumberFormatException e) {
-                throw new MalformedHttpHeaderException("Invalid HTTP status code (see section 6.1.1 in RFC 2616)", e);
+                throw new HttpMalformedHeaderException("Invalid HTTP status code (see section 6.1.1 in RFC 2616)", e);
             }
 
             while (stringTokenizer.hasMoreTokens()) {
-                String fieldName = stringTokenizer.nextToken(" ");
-                fieldName = fieldName.substring(0, fieldName.length() - 1);
+                String fieldName = stringTokenizer.nextToken("\r\n:");
                 String fieldValue = stringTokenizer.nextToken("\r\n");
+                fieldValue = fieldValue.substring(2);   // Avoid ": "
 
                 // general-header (see section 4.5 in RFC 2616)
                 if (httpHeader.setGeneralHeaderField(fieldName, fieldValue)) {
@@ -106,49 +109,63 @@ public class HttpResponseHeader extends HttpHeader {
                 httpHeader.setEntityHeaderField(fieldName, fieldValue);
             }
         } catch (NoSuchElementException e) {
-            throw new MalformedHttpHeaderException("Unexpected end of the header (see section 6 in RFC 2616)", e);
+            throw new HttpMalformedHeaderException("Unexpected end of the header (see section 6 in RFC 2616)", e);
         }
 
         return httpHeader;
     }
 
     private boolean setResponseHeaderField(String fieldName, String fieldValue) {
-        HttpResponseHeaderField responseHeaderField = HttpResponseHeaderField.valueFor(fieldName);
-        if (responseHeaderField == null) {
-            return false;
-        }
-        
-        switch (HttpResponseHeaderField.valueFor(fieldName)) {
-            case ACCEPT_RANGES:
+        switch (fieldName) {
+            case "Accept-Ranges":
                 acceptRanges = fieldValue;
                 return true;
-            case AGE:
+            case "Age":
                 age = fieldValue;
                 return true;
-            case ETAG:
+            case "ETag":
                 eTag = fieldValue;
                 return true;
-            case LOCATION:
+            case "Location":
                 location = fieldValue;
                 return true;
-            case PROXY_AUTHENTICATE:
+            case "Proxy-Authenticate":
                 proxyAuthenticate = fieldValue;
                 return true;
-            case RETRY_AFTER:
+            case "Retry-After":
                 retryAfter = fieldValue;
                 return true;
-            case SERVER:
+            case "Server":
                 server = fieldValue;
                 return true;
-            case VARY:
+            case "Vary":
                 vary = fieldValue;
                 return true;
-            case WWW_AUTHENTICATE:
+            case "WWW-Authenticate":
                 wwwAuthenticate = fieldValue;
                 return true;
             default:
                 return false;
         }
+    }
+
+    @Override
+    public ContentTransferMethod contentTransferMethod() {
+        if (contentTransferMethod != null) {
+            return contentTransferMethod;
+        }
+
+        if (contentLength != null) {
+            contentTransferMethod = ContentTransferMethod.CONTENT_LENGTH;
+        } else if (contentLength == null && transferEncoding != null && !transferEncoding.equals("identity")) {
+            contentTransferMethod = ContentTransferMethod.CHUNKED;
+        } else if (contentLength == null && !"chunked".equals(transferEncoding)) {
+            contentTransferMethod = ContentTransferMethod.CONNECTION_CLOSE;
+        } else {
+            contentTransferMethod = ContentTransferMethod.NO_CONTENT;
+        }
+
+        return contentTransferMethod;
     }
 
     public String getAcceptRanges() {
@@ -168,7 +185,7 @@ public class HttpResponseHeader extends HttpHeader {
      *
      * If null see extensionStatusCode
      *
-     * @see #getExtensionStatusCode() 
+     * @see #getExtensionStatusCode()
      */
     public HttpStatusCode getStatusCode() {
         return statusCode;
@@ -177,10 +194,10 @@ public class HttpResponseHeader extends HttpHeader {
     /**
      * <b>Extention status code</b><p>
      *
-     * Status code which are not supported by the RFC 2616.
-     * To be used only if getStatusCode() return null.
-     * 
-     * @see #getStatusCode() 
+     * Status code which are not supported by the RFC 2616. To be used only if
+     * getStatusCode() return null.
+     *
+     * @see #getStatusCode()
      */
     public int getExtensionStatusCode() {
         return extensionStatusCode;

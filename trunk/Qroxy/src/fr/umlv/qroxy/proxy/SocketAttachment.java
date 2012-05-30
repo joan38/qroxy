@@ -14,9 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy;
+package fr.umlv.qroxy.proxy;
 
-import fr.umlv.qroxy.http.HttpHeader;
+import fr.umlv.qroxy.http.HttpRequestHeader;
+import fr.umlv.qroxy.http.HttpResponseHeader;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 
@@ -28,6 +29,10 @@ public class SocketAttachment {
 
     private final ByteBuffer bufferClientToServer;
     private final ByteBuffer bufferServerToClient;
+    private HttpRequestHeader requestHeader;
+    private HttpResponseHeader responseHeader;
+    private int readedByte;
+    private boolean closed;
     private SelectionKey client;
     private SelectionKey server;
 
@@ -39,12 +44,40 @@ public class SocketAttachment {
         bufferServerToClient.flip();
     }
 
-    public void setClient(SelectionKey client) {
-        this.client = client;
+    public boolean isClosed() {
+        return closed;
     }
 
-    public void setServer(SelectionKey server) {
-        this.server = server;
+    public void close() {
+        this.closed = true;
+    }
+
+    public int readedByte() {
+        return readedByte;
+    }
+    
+    public void resetReadedByte() {
+        this.readedByte = 0;
+    }
+
+    public void addReadedByte(int readedByte) {
+        this.readedByte += readedByte;
+    }
+
+    public HttpRequestHeader getRequestHeader() {
+        return requestHeader;
+    }
+
+    public void setRequestHeader(HttpRequestHeader requestHeader) {
+        this.requestHeader = requestHeader;
+    }
+
+    public HttpResponseHeader getResponseHeader() {
+        return responseHeader;
+    }
+
+    public void setResponseHeader(HttpResponseHeader responseHeader) {
+        this.responseHeader = responseHeader;
     }
 
     public ByteBuffer getBufferClientToServer() {
@@ -53,6 +86,14 @@ public class SocketAttachment {
 
     public ByteBuffer getBufferServerToClient() {
         return bufferServerToClient;
+    }
+
+    public void setClient(SelectionKey client) {
+        this.client = client;
+    }
+
+    public void setServer(SelectionKey server) {
+        this.server = server;
     }
 
     public SelectionKey getClient() {

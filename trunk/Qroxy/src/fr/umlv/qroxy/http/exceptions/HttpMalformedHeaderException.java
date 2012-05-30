@@ -14,37 +14,29 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy.config;
+package fr.umlv.qroxy.http.exceptions;
+
+import java.io.IOException;
 
 /**
  *
  * @author joan
  */
-public class QosRule {
+public class HttpMalformedHeaderException extends IOException {
+
+    public HttpMalformedHeaderException() {
+        super();
+    }
     
-    private final Integer minSpeed;
-    private final Integer maxSpeed;
-    private final Integer priority;
-
-    public QosRule(Integer minSpeed, Integer maxSpeed, Integer priority) {
-        if (minSpeed == null && maxSpeed == null && priority == null) {
-            throw new NullPointerException("At least one rule of minSpeed, maxSpeed and priority is required");
-        }
-        
-        this.minSpeed = minSpeed;
-        this.maxSpeed = maxSpeed;
-        this.priority = priority;
+    public HttpMalformedHeaderException(String string) {
+        super(string);
     }
 
-    public Integer getMaxSpeed() {
-        return maxSpeed;
+    public HttpMalformedHeaderException(Throwable cause) {
+        super(cause);
     }
 
-    public Integer getMinSpeed() {
-        return minSpeed;
-    }
-
-    public Integer getPriority() {
-        return priority;
+    public HttpMalformedHeaderException(String message, Throwable cause) {
+        super(message, cause);
     }
 }

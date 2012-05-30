@@ -17,7 +17,6 @@
 package fr.umlv.qroxy.config;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -33,8 +32,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * Objet représentant les config Parse le fichier de conf formaté à la entete
- * HTTP port du serveur d'infos
+ * Object representing configurations.
  *
  * @author joan
  */
@@ -45,17 +43,25 @@ public class Config extends DefaultHandler {
     private final ArrayList<Category> categories = new ArrayList<>();
     private SocketAddress webUiBindAddress;
     private String cachePath;
+    private int cacheDefaultMaxSize;
 
     private Config() {
     }
 
+    /**
+     * Create a config file from an XML formated file.
+     *
+     * @param configFile The XML file
+     * @return The configuration file
+     * @throws XMLQroxyConfigException
+     */
     public static Config loadFromXml(File configFile) throws XMLQroxyConfigException {
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser saxParser = factory.newSAXParser();
             Config config = new Config();
             saxParser.parse(configFile, config);
-            
+
             return config;
         } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new XMLQroxyConfigException("Error while parsing the config file: " + e.getMessage(), e);
@@ -70,6 +76,7 @@ public class Config extends DefaultHandler {
     boolean bindPortTags;
     boolean cacheTags;
     boolean pathTags;
+    boolean defaultMaxSizeTags;
     boolean categoriesTags;
     boolean categoryTags;
     boolean regexsTags;
@@ -110,6 +117,8 @@ public class Config extends DefaultHandler {
             cacheTags = true;
         } else if (qName.equalsIgnoreCase("path")) {
             pathTags = true;
+        } else if (qName.equalsIgnoreCase("maxDefaultSize")) {
+            defaultMaxSizeTags = true;
         } else if (qName.equalsIgnoreCase("categories")) {
             categoriesTags = true;
         } else if (qName.equalsIgnoreCase("category")) {
@@ -149,12 +158,20 @@ public class Config extends DefaultHandler {
                 throw new SAXException("Invalid port number format: " + value, e);
             }
             bindPortTags = false;
+        } else if (defaultMaxSizeTags) {
+            String value = new String(chars, start, length);
+            try {
+                cacheDefaultMaxSize = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                throw new SAXException("Invalid cache default max size number format: " + value, e);
+            }
+            defaultMaxSizeTags = false;
         } else if (pathTags) {
             cachePath = new String(chars, start, length);
             pathTags = false;
         } else if (regexTags) {
             currentRegexs.put(currentApplyOn, new String(chars, start, length));
-            regexTags= false;
+            regexTags = false;
         } else if (minSpeedTags) {
             String value = new String(chars, start, length);
             try {
@@ -202,28 +219,33 @@ public class Config extends DefaultHandler {
             try {
                 currentQosRule = new QosRule(currentMinSpeed, currentMaxSpeed, currentPriority);
             } catch (NullPointerException e) {
-                throw new SAXException("At least one rule of minSpeed, maxSpeed and priority has to be defined", e);
+                throw new SAXException(e.getMessage(), e);
             }
         } else if (qName.equalsIgnoreCase("cacheRule") && cacheRuleTags) {
             currentCacheRule = new CacheRule(currentMaxSize);
-        } else if (qName.equalsIgnoreCase("category") && categoryTags) {
+        } else if (qName.equalsIgnoreCase(
+                "category") && categoryTags) {
             try {
                 categories.add(new Category(currentCategoryName, currentRegexs, currentQosRule, currentCacheRule));
             } catch (NullPointerException e) {
-                throw new SAXException("categoryName, regexs and at least one of qosRule or/and cacheRule is required", e);
+                throw new SAXException(e.getMessage(), e);
             }
         }
+    }
+
+    public SocketAddress getWebUiBindAddress() {
+        return webUiBindAddress;
     }
 
     public String getCachePath() {
         return cachePath;
     }
 
-    public Collection<Category> getCategories() {
-        return Collections.unmodifiableCollection(categories);
+    public int getCacheDefaultMaxSize() {
+        return cacheDefaultMaxSize;
     }
 
-    public SocketAddress getWebUiBindAddress() {
-        return webUiBindAddress;
+    public Collection<Category> getCategories() {
+        return Collections.unmodifiableCollection(categories);
     }
 }

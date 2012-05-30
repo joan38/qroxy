@@ -18,16 +18,13 @@ package fr.umlv.qroxy;
 
 import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.config.XMLQroxyConfigException;
+import fr.umlv.qroxy.proxy.QroxyServer;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
