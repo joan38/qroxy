@@ -33,8 +33,8 @@ import java.util.*;
 public abstract class HttpHeader {
 
     protected final static SimpleDateFormat dateFormater = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-    protected String stringHeader;
-    protected int headerLength;
+    protected final String stringHeader;
+    protected final int headerLength;
     ContentTransferMethod contentTransferMethod;
     /**
      * <b>HTTP Version (see section 3.1 in RFC 2616)
@@ -82,7 +82,16 @@ public abstract class HttpHeader {
      */
     protected HashMap<String, String> extensionHeader = new HashMap<>();
 
-    protected HttpHeader() {
+    protected HttpHeader(String stringHeader) throws HttpMalformedHeaderException {        
+        // Cut the message body
+        int endOfHeader = stringHeader.indexOf("\r\n\r\n");
+        if (endOfHeader == -1) {
+            throw new HttpMalformedHeaderException("No HTTP header reconised");
+        }
+        this.stringHeader = stringHeader.substring(0, endOfHeader) + "\r\n\r\n";
+        
+        // Set the length of the header
+        this.headerLength = this.stringHeader.length();
     }
 
     public static HttpHeader parse(String httpMessage) throws HttpMalformedHeaderException {
@@ -336,5 +345,10 @@ public abstract class HttpHeader {
 
     public String getWarning() {
         return warning;
+    }
+    
+    @Override
+    public String toString() {
+        return stringHeader;
     }
 }
