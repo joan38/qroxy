@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Joan Goyeau <joan.goyeau@gmail.com>
+ * Copyright (C) 2012 Joan Goyeau & Guillaume Demurger
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,16 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy.http;
+package fr.umlv.qroxy.cache;
 
 /**
- * Enum that represent the different way to detect the end of a HTTP message.
  *
- * @author Joan Goyeau <joan.goyeau@gmail.com>
+ * @author Guillaume
  */
-public enum ContentTransferMethod {
-    NO_CONTENT,
-    CONTENT_LENGTH,
-    CONNECTION_CLOSE,
-    CHUNKED;
+public class Cache {
+    
 }
