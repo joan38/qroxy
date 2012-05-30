@@ -65,6 +65,10 @@ public class HttpRequestHeader extends HttpHeader {
     protected String te;
     protected String userAgent;
 
+    private HttpRequestHeader(String stringHeader) throws HttpMalformedHeaderException {
+        super(stringHeader);
+    }
+    
     /**
      * Parse a request header (see section 5 in RFC 2616)
      *
@@ -74,12 +78,8 @@ public class HttpRequestHeader extends HttpHeader {
      */
     public static HttpRequestHeader parse(String httpRequestMessage) throws HttpMalformedHeaderException {
         Objects.requireNonNull(httpRequestMessage);
-        HttpRequestHeader httpHeader = new HttpRequestHeader();
-
-        // Cut the message body
-        httpRequestMessage = httpRequestMessage.substring(0, httpRequestMessage.indexOf("\r\n\r\n"));
-        httpHeader.headerLength = httpRequestMessage.length() + 4;
-        StringTokenizer stringTokenizer = new StringTokenizer(httpRequestMessage);
+        HttpRequestHeader httpHeader = new HttpRequestHeader(httpRequestMessage);
+        StringTokenizer stringTokenizer = new StringTokenizer(httpHeader.stringHeader);
 
         // Request-Line (see section 5.1 in RFC 2616)
         try {

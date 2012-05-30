@@ -57,6 +57,10 @@ public class HttpResponseHeader extends HttpHeader {
     protected String server;
     protected String vary;
     protected String wwwAuthenticate;
+    
+    private HttpResponseHeader(String stringHeader) throws HttpMalformedHeaderException {
+        super(stringHeader);
+    }
 
     /**
      * Parse a response header (see section 6 in RFC 2616)
@@ -67,12 +71,8 @@ public class HttpResponseHeader extends HttpHeader {
      */
     public static HttpResponseHeader parse(String httpResponseMessage) throws HttpMalformedHeaderException {
         Objects.requireNonNull(httpResponseMessage);
-        HttpResponseHeader httpHeader = new HttpResponseHeader();
-
-        // Cut the message body
-        httpResponseMessage = httpResponseMessage.substring(0, httpResponseMessage.indexOf("\r\n\r\n"));
-        httpHeader.headerLength = httpResponseMessage.length() + 4;
-        StringTokenizer stringTokenizer = new StringTokenizer(httpResponseMessage);
+        HttpResponseHeader httpHeader = new HttpResponseHeader(httpResponseMessage);
+        StringTokenizer stringTokenizer = new StringTokenizer(httpHeader.stringHeader);
 
         // Status-Line (see section 6.1 in RFC 2616)
         try {
