@@ -16,6 +16,7 @@
  */
 package fr.umlv.qroxy.config;
 
+import fr.umlv.qroxy.http.HttpRequestHeader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,8 +33,10 @@ public class Category {
     private final CacheRule cacheRule;
 
     public Category(String name, HashMap<String, String> regexs, QosRule qosRule, CacheRule cacheRule) {
-        Objects.requireNonNull(name);
-        Objects.requireNonNull(regexs);
+        Objects.requireNonNull(name, "A name is required for the category");
+        if (regexs == null || regexs.isEmpty()) {
+            throw new NullPointerException("A minimum of one regex is required for the category");
+        }
         if (qosRule == null && cacheRule == null) {
             throw new NullPointerException("At least one of QosRule or/and CacheRule is required");
         }

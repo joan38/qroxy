@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Joan Goyeau & Guillaume Demurger
+ * Copyright (C) 2012 Joan Goyeau <joan.goyeau@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,29 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy.http;
-
-import java.io.IOException;
+package fr.umlv.qroxy.http.exceptions;
 
 /**
  *
- * @author joan
+ * @author Joan Goyeau <joan.goyeau@gmail.com>
  */
-public class MalformedHttpHeaderException extends IOException {
+public class HttpUnsupportedMethodException extends HttpMalformedHeaderException {
 
-    public MalformedHttpHeaderException() {
-        super();
-    }
-    
-    MalformedHttpHeaderException(String string) {
-        super(string);
+    public HttpUnsupportedMethodException(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    public MalformedHttpHeaderException(Throwable cause) {
+    public HttpUnsupportedMethodException(Throwable cause) {
         super(cause);
     }
 
-    public MalformedHttpHeaderException(String message, Throwable cause) {
-        super(message, cause);
+    public HttpUnsupportedMethodException(String string) {
+        super(string);
+    }
+
+    public HttpUnsupportedMethodException() {
+        super();
     }
 }

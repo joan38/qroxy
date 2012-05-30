@@ -6,14 +6,18 @@
     </webUi>
     <cache>
         <path>~/Desktop/cache</path>
+        <maxDefaultSize>10000</maxDefaultSize>
     </cache>
     <categories>
+        <!-- The order of categories are important because if several categories
+        matches a header, first will be affected -->
         <category name="test">
             <regexs>
                 <regex applyOn="url">dfgf</regex>
                 <regex applyOn="Content-Length">0</regex>
             </regexs>
             <qosRule>
+                <minSpeed>10</minSpeed>
                 <maxSpeed>100</maxSpeed>
                 <priority>2</priority>
             </qosRule>

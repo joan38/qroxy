@@ -16,13 +16,14 @@
  */
 package fr.umlv.qroxy.http;
 
+import fr.umlv.qroxy.config.Category;
+import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
+import fr.umlv.qroxy.http.exceptions.HttpPreconditionFailedException;
+import fr.umlv.qroxy.http.exceptions.HttpUnsupportedMethodException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.Date;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.StringTokenizer;
+import java.util.*;
 
 /**
  * ava.net.URI; import java.net.URISyntaxException; import java.net.URL; import
@@ -71,19 +72,22 @@ public class HttpRequestHeader extends HttpHeader {
      * @return
      * @throws MalformedHttpHeaderException
      */
-    public static HttpRequestHeader parse(String httpRequestMessage) throws MalformedHttpHeaderException {
+    public static HttpRequestHeader parse(String httpRequestMessage) throws HttpMalformedHeaderException {
         Objects.requireNonNull(httpRequestMessage);
+        HttpRequestHeader httpHeader = new HttpRequestHeader();
+
+        // Cut the message body
+        httpRequestMessage = httpRequestMessage.substring(0, httpRequestMessage.indexOf("\r\n\r\n"));
+        httpHeader.headerLength = httpRequestMessage.length() + 4;
         StringTokenizer stringTokenizer = new StringTokenizer(httpRequestMessage);
 
         // Request-Line (see section 5.1 in RFC 2616)
-        HttpRequestHeader httpHeader = new HttpRequestHeader();
-
         try {
             try {
                 // Method (see section 5.1.1 in RFC 2616)
                 httpHeader.method = HttpMethod.valueOf(stringTokenizer.nextToken());
             } catch (IllegalArgumentException e) {
-                throw new MalformedHttpHeaderException("Unsupported method (see section 5.1.1 in RFC 2616)", e);
+                throw new HttpUnsupportedMethodException("Unsupported method (see section 5.1.1 in RFC 2616)", e);
             }
 
             try {
@@ -99,19 +103,16 @@ public class HttpRequestHeader extends HttpHeader {
                             httpHeader.uri.getFragment());
                 }
             } catch (URISyntaxException e) {
-                throw new MalformedHttpHeaderException("Invalid request URI (see section 5.1.2 in RFC 2616)", e);
+                throw new HttpMalformedHeaderException("Invalid request URI (see section 5.1.2 in RFC 2616)", e);
             }
 
             // HTTP version (see section 3.1 in RFC 2616)
-            if (!stringTokenizer.nextToken("/").substring(1).equals("HTTP")) {
-                throw new MalformedHttpHeaderException("Invalid HTTP version (see section 3.1 in RFC 2616)");
-            }
-            httpHeader.parseVersion(stringTokenizer);
+            httpHeader.version = HttpHeader.parseVersion(stringTokenizer.nextToken());
 
             while (stringTokenizer.hasMoreTokens()) {
-                String fieldName = stringTokenizer.nextToken(" ");
-                fieldName = fieldName.substring(0, fieldName.length() - 1);
+                String fieldName = stringTokenizer.nextToken("\r\n:");
                 String fieldValue = stringTokenizer.nextToken("\r\n");
+                fieldValue = fieldValue.substring(2);   // Avoid ": "
 
                 // general-header (see section 4.5 in RFC 2616)
                 if (httpHeader.setGeneralHeaderField(fieldName, fieldValue)) {
@@ -125,80 +126,281 @@ public class HttpRequestHeader extends HttpHeader {
                 httpHeader.setEntityHeaderField(fieldName, fieldValue);
             }
         } catch (NoSuchElementException e) {
-            throw new MalformedHttpHeaderException("Unexpected end of the header (see section 5 in RFC 2616)", e);
+            throw new HttpMalformedHeaderException("Unexpected end of the header (see section 5 in RFC 2616)", e);
         }
 
         return httpHeader;
     }
 
-    private boolean setRequestHeaderField(String fieldName, String fieldValue) throws MalformedHttpHeaderException {
-        HttpRequestHeaderField requestHeaderField = HttpRequestHeaderField.valueFor(fieldName);
-        if (requestHeaderField == null) {
-            return false;
-        }
-
-        switch (requestHeaderField) {
-            case ACCEPT:
+    private boolean setRequestHeaderField(String fieldName, String fieldValue) throws HttpMalformedHeaderException {
+        switch (fieldName) {
+            case "Accept":
                 accept = fieldValue;
                 return true;
-            case ACCEPT_CHARSET:
+            case "Accept-Charset":
                 acceptCharset = fieldValue;
                 return true;
-            case ACCEPT_ENCODING:
+            case "Accept-Encoding":
                 acceptEncoding = fieldValue;
                 return true;
-            case ACCEPT_LANGUAGE:
+            case "Accept-Language":
                 acceptLanguage = fieldValue;
                 return true;
-            case AUTHORIZATION:
+            case "Authorization":
                 authorization = fieldValue;
                 return true;
-            case EXPECT:
+            case "Expect":
                 expect = fieldValue;
                 return true;
-            case FROM:
+            case "From":
                 from = fieldValue;
                 return true;
-            case HOST:
+            case "Host":
                 host = fieldValue;
                 return true;
-            case IF_MATCH:
+            case "If-Match":
                 ifMatch = fieldValue;
                 return true;
-            case IF_MODIFIED_SINCE:
+            case "If-Modified-Since":
                 try {
                     ifModifiedSince = dateFormater.parse(fieldValue);
                 } catch (ParseException e) {
-                    throw new MalformedHttpHeaderException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
+                    throw new HttpPreconditionFailedException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
                 }
                 return true;
-            case IF_NONE_MATCH:
+            case "If-None-Match":
                 ifNoneMatch = fieldValue;
                 return true;
-            case IF_RANGE:
+            case "If-Range":
                 ifRange = fieldValue;
                 return true;
-            case MAX_FORWARDS:
+            case "Max-Forwards":
                 maxForwards = fieldValue;
                 return true;
-            case PROXY_AUTHORIZATION:
+            case "Proxy-Authorization":
                 proxyAuthorization = fieldValue;
                 return true;
-            case RANGE:
+            case "Range":
                 range = fieldValue;
                 return true;
-            case REFERER:
+            case "Referer":
                 referer = fieldValue;
                 return true;
-            case TE:
+            case "TE":
                 te = fieldValue;
                 return true;
-            case USER_AGENT:
+            case "User-Agent":
                 userAgent = fieldValue;
                 return true;
             default:
                 return false;
         }
+    }
+
+    public boolean matchesCatagory(Category category) {
+        Map<String, String> regexs = category.getRegexs();
+        Set<Map.Entry<String, String>> entrySet = regexs.entrySet();
+
+        for (Map.Entry<String, String> entry : entrySet) {
+            switch (entry.getKey()) {
+                /**
+                 * Requested URL
+                 */
+                case "url":
+                    if (!uri.toString().matches(entry.getValue())) {
+                        return false;
+                    }
+                /**
+                 * General Header Fields
+                 */
+                case "Cache-Control":
+                    if (!(cacheControl == null ? "" : cacheControl).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Connection":
+                    if (!(connection == null ? "" : connection).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Date":
+                    if (!(date == null ? "" : dateFormater.format(date)).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Pragma":
+                    if (!(pragma == null ? "" : pragma).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Trailer":
+                    if (!(trailer == null ? "" : trailer).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Transfer-Encoding":
+                    if (!(transferEncoding == null ? "" : transferEncoding).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Upgrade":
+                    if (!(upgrade == null ? "" : upgrade).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Via":
+                    if (!(via == null ? "" : via).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Warning":
+                    if (!(warning == null ? "" : warning).matches(entry.getValue())) {
+                        return false;
+                    }
+                /**
+                 * Request Header Fields
+                 */
+                case "Accept":
+                    if (!(accept == null ? "" : accept).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Accept-Charset":
+                    if (!(acceptCharset == null ? "" : acceptCharset).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Accept-Encoding":
+                    if (!(acceptEncoding == null ? "" : acceptEncoding).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Accept-Language":
+                    if (!(acceptLanguage == null ? "" : acceptLanguage).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Authorization":
+                    if (!(authorization == null ? "" : authorization).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Expect":
+                    if (!(expect == null ? "" : expect).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "From":
+                    if (!(from == null ? "" : from).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Host":
+                    if (!(host == null ? "" : host).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "If-Match":
+                    if (!(ifMatch == null ? "" : ifMatch).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "If-Modified-Since":
+                    if (!(ifModifiedSince == null ? "" : dateFormater.format(ifModifiedSince)).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "If-None-Match":
+                    if (!(ifNoneMatch == null ? "" : ifNoneMatch).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "If-Range":
+                    if (!(ifRange == null ? "" : ifRange).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Max-Forwards":
+                    if (!(maxForwards == null ? "" : maxForwards).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Proxy-Authorization":
+                    if (!(proxyAuthorization == null ? "" : proxyAuthorization).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Range":
+                    if (!(range == null ? "" : range).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Referer":
+                    if (!(referer == null ? "" : referer).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "TE":
+                    if (!(te == null ? "" : te).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "User-Agent":
+                    if (!(userAgent == null ? "" : userAgent).matches(entry.getValue())) {
+                        return false;
+                    }
+                /**
+                 * Entity Header Fields
+                 */
+                case "Allow":
+                    if (!(allow == null ? "" : allow).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Content-Encoding":
+                    if (!(contentEncoding == null ? "" : contentEncoding).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Content-Language":
+                    if (!(contentLanguage == null ? "" : contentLanguage).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Content-Length":
+                    if (!new Integer(contentLength).toString().matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Content-Location":
+                    if (!(contentLocation == null ? "" : contentLocation).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Content-MD5":
+                    if (!(contentMD5 == null ? "" : contentMD5).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Content-Range":
+                    if (!(contentRange == null ? "" : contentRange).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Content-Type":
+                    if (!(contentType == null ? "" : contentType).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Expires":
+                    if (!(expires == null ? "" : dateFormater.format(expires)).matches(entry.getValue())) {
+                        return false;
+                    }
+                case "Last-Modified":
+                    if (!(lastModified == null ? "" : dateFormater.format(lastModified)).matches(entry.getValue())) {
+                        return false;
+                    }
+                default:
+                    String extensionValue = extensionHeader.get(entry.getKey());
+                    if (!(extensionValue == null ? "" : extensionValue).matches(entry.getValue())) {
+                        return false;
+                    }
+            }
+        }
+        return true;
+    }
+
+    public Category matchesCatagories(ArrayList<Category> categories) {
+        for (Category category : categories) {
+            if (matchesCatagory(category)) {
+                return category;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public ContentTransferMethod contentTransferMethod() {
+        if (contentTransferMethod != null) {
+            return contentTransferMethod;
+        }
+
+        if (contentLength != null) {
+            contentTransferMethod = ContentTransferMethod.CONTENT_LENGTH;
+        } else if (contentLength == null && transferEncoding != null && !transferEncoding.equals("identity")) {
+            contentTransferMethod = ContentTransferMethod.CHUNKED;
+        } else {
+            contentTransferMethod = ContentTransferMethod.NO_CONTENT;
+        }
+
+        return contentTransferMethod;
     }
 
     public String getAccept() {

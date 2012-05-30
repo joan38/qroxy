@@ -17,33 +17,13 @@
 package fr.umlv.qroxy.http;
 
 /**
- * HTTP Version (see section 3.1 in RFC 2616)
- * 
+ * Enum that represent the different way to detect the end of a HTTP message.
+ *
  * @author Joan Goyeau <joan.goyeau@gmail.com>
  */
-public enum HttpVersion {
-
-    /**
-     * HTTP version 1.1
-     */
-    HTTP_1_1("HTTP/1.1");
-    private String version;
-
-    private HttpVersion(String version) {
-        this.version = version;
-    }
-
-    public static HttpVersion valueFor(String version) {
-        for (HttpVersion httpVersion : HttpVersion.values()) {
-            if (httpVersion.version.equals(version)) {
-                return httpVersion;
-            }
-        }
-        return null;
-    }
-    
-    @Override
-    public String toString() {
-        return version;
-    }
+public enum ContentTransferMethod {
+    NO_CONTENT,
+    CONTENT_LENGTH,
+    CONNECTION_CLOSE,
+    CHUNKED; 
 }
