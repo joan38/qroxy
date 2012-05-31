@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Joan Goyeau & Guillaume Demurger
+ * Copyright (C) 2012 joan
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,10 +16,26 @@
  */
 package fr.umlv.qroxy.cache;
 
+import java.io.IOException;
+
 /**
  *
- * @author Guillaume
+ * @author joan
  */
-public class Cache {
-    
+public class UncachableHttpResponse extends IOException {
+
+    public UncachableHttpResponse(Throwable cause) {
+        super(cause);
+    }
+
+    public UncachableHttpResponse(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public UncachableHttpResponse(String message) {
+        super(message);
+    }
+
+    public UncachableHttpResponse() {
+    }
 }
