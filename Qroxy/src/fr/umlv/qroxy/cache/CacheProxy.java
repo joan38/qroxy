@@ -14,27 +14,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy.config;
+package fr.umlv.qroxy.cache;
 
 /**
  *
- * @author joan
+ * @author Guillaume
  */
-public class CacheRule {
-
-    private final int maxSize;
-    private final int maxRessourceSize;
+public class CacheProxy {
     
-    public CacheRule(int maxSize, int maxRessourceSize) {
-        this.maxSize = maxSize;
-        this.maxRessourceSize = maxRessourceSize;
-    }
-
-    public int getMaxSize() {
-        return maxSize;
-    }
-    
-    public int getMaxRessourceSize() {
-        return maxRessourceSize;
-    }
 }

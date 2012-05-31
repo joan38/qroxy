@@ -15,12 +15,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package fr.umlv.qroxy.cache;
+import fr.umlv.qroxy.config.Config;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.util.HashMap;
+import java.util.Map;
 
+import java.net.URI;
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-
 /**
  *
  * @author Guillaume
@@ -46,3 +52,4 @@ public interface CacheAccess {
      */
     public FileOutputStream cacheResource(HttpResponseHeader responseHeader) throws CacheException;
 }
+

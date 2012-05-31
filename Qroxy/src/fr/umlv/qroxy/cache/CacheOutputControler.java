@@ -16,10 +16,18 @@
  */
 package fr.umlv.qroxy.cache;
 
+import fr.umlv.qroxy.http.HttpHeader;
+import java.util.Date;
+
 /**
  *
  * @author Guillaume
  */
-public class CacheMessageEchanger {
-    
+public class CacheOutputControler {
+  
+    public static int isValid(HttpHeader header) {
+        Date date = header.getExpires();
+        Date lastModified = header.getLastModified();
+        return 0;
+    }
 }
