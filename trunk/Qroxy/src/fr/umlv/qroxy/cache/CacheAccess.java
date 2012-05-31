@@ -16,7 +16,10 @@
  */
 package fr.umlv.qroxy.cache;
 
-import java.net.URI;
+import fr.umlv.qroxy.http.HttpRequestHeader;
+import fr.umlv.qroxy.http.HttpResponseHeader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 
 /**
  *
@@ -24,7 +27,7 @@ import java.net.URI;
  */
 public interface CacheAccess {
     
-    public CacheInputChannel getResource(URI uri);
+    public FileInputStream getResource(HttpRequestHeader requestHeader);
     
-    public CacheOutputChannel cacheResource(URI uri);
+    public FileOutputStream cacheResource(HttpResponseHeader responseHeader);
 }
