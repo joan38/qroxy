@@ -22,20 +22,20 @@ import java.io.IOException;
  *
  * @author joan
  */
-public class UncachableHttpMessage extends IOException {
+public class CacheException extends IOException {
 
-    public UncachableHttpMessage(Throwable cause) {
+    public CacheException(Throwable cause) {
         super(cause);
     }
 
-    public UncachableHttpMessage(String message, Throwable cause) {
+    public CacheException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public UncachableHttpMessage(String message) {
+    public CacheException(String message) {
         super(message);
     }
 
-    public UncachableHttpMessage() {
+    public CacheException() {
     }
 }
