@@ -26,8 +26,23 @@ import java.io.FileOutputStream;
  * @author Guillaume
  */
 public interface CacheAccess {
-    
-    public FileInputStream getResource(HttpRequestHeader requestHeader) throws UncachableHttpMessage;
-    
-    public FileOutputStream cacheResource(HttpResponseHeader responseHeader) throws UncachableHttpMessage;
+
+    /**
+     * Retrieve cached resource.
+     *
+     * @param requestHeader
+     * @return The FileInputStream of resource or null if this resource is not
+     * available in cache.
+     * @throws CacheException If the HttpRequestHeader doesn't match preconditions.
+     */
+    public FileInputStream getResource(HttpRequestHeader requestHeader) throws CacheException;
+
+    /**
+     * Cache resource
+     * 
+     * @param responseHeader
+     * @return The FileOutputStream were to cache the resource
+     * @throws CacheException If the HttpRequestHeader doesn't match preconditions.
+     */
+    public FileOutputStream cacheResource(HttpResponseHeader responseHeader) throws CacheException;
 }
