@@ -27,7 +27,7 @@ import java.io.FileOutputStream;
  */
 public interface CacheAccess {
     
-    public FileInputStream getResource(HttpRequestHeader requestHeader);
+    public FileInputStream getResource(HttpRequestHeader requestHeader) throws UncachableHttpMessage;
     
-    public FileOutputStream cacheResource(HttpResponseHeader responseHeader);
+    public FileOutputStream cacheResource(HttpResponseHeader responseHeader) throws UncachableHttpMessage;
 }
