@@ -16,10 +16,41 @@
  */
 package fr.umlv.qroxy.cache;
 
+import fr.umlv.qroxy.http.HttpRequestHeader;
+import fr.umlv.qroxy.http.HttpResponseHeader;
+
 /**
  *
  * @author Guillaume
  */
-public class CacheProxy {
+public class CacheProxy implements CacheAccess {
+    private final CacheInputControler cacheInputControler = new CacheInputControler();
+    private final CacheInputChannelFactory inputChannelFactory = new CacheInputChannelFactory();
+    private final CacheOutputChannelFactory outputChannelFactory = new CacheOutputChannelFactory();
+    private final Cache cache;
+
+    public CacheProxy(Cache cache) {
+        this.cache = cache;
+    }
+    
+    @Override
+    public CacheInputChannel getResource(HttpRequestHeader requestHeader) throws CacheException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public CacheOutputChannel cacheResource(HttpResponseHeader responseHeader) throws CacheException {
+        boolean cacheable = cacheInputControler.isCacheable(responseHeader);
+        if(cacheable) {
+            cache.put(responseHeader);
+        }
+        return cache
+        
+    }
+
+    @Override
+    public boolean corruptCachedResource(CacheInputChannel resource) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
     
 }

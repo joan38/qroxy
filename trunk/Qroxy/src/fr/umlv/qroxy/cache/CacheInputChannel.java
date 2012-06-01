@@ -25,12 +25,9 @@ import java.nio.channels.FileChannel;
  * @author Joan Goyeau <joan.goyeau@gmail.com>
  */
 public class CacheInputChannel implements Closeable, AutoCloseable {
-
-    private File cacheFile;
-    private FileChannel cacheFileChannel;
+    private final FileChannel cacheFileChannel;
 
     public CacheInputChannel(File cacheFile) throws FileNotFoundException {
-        this.cacheFile = cacheFile;
         this.cacheFileChannel = new FileInputStream(cacheFile).getChannel();
     }
 
@@ -49,10 +46,6 @@ public class CacheInputChannel implements Closeable, AutoCloseable {
 
     public void resetPosition() throws IOException {
         cacheFileChannel.position(0);
-    }
-
-    public File getFile() {
-        return cacheFile;
     }
 
     public FileChannel getFileChannel() {
