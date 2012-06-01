@@ -16,7 +16,6 @@
  */
 package fr.umlv.qroxy.config;
 
-import fr.umlv.qroxy.http.HttpRequestHeader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;

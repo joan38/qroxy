@@ -18,8 +18,10 @@ package fr.umlv.qroxy.config;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -38,14 +40,23 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class Config extends DefaultHandler {
 
+    public static final int MAX_HEADER_LENGTH = 8192;
     private static final Double XML_CONFIG_VERSION = 1.0;
     private static final int DEFAULT_WEBUI_BIND_PORT = 7777;
+    private static final int DEFAULT_PROXY_BIND_PORT = 8080;
     private final ArrayList<Category> categories = new ArrayList<>();
-    private SocketAddress webUiBindAddress;
+    private InetSocketAddress proxyBindSocketAddress;
+    private SocketAddress webUiBindSocketAddress;
     private String cachePath;
     private int cacheDefaultMaxSize;
+    private InetAddress cacheExchangingMulticastAddress;
 
-    private Config() {
+    public Config(InetSocketAddress setListeningAddress, SocketAddress webUiBindAddress, String cachePath, int cacheDefaultMaxSize, InetAddress cacheExchangingMulticastAddress) {
+        this.proxyBindSocketAddress = setListeningAddress;
+        this.webUiBindSocketAddress = webUiBindAddress;
+        this.cachePath = cachePath;
+        this.cacheDefaultMaxSize = cacheDefaultMaxSize;
+        this.cacheExchangingMulticastAddress = cacheExchangingMulticastAddress;
     }
 
     /**
@@ -55,14 +66,11 @@ public class Config extends DefaultHandler {
      * @return The configuration file
      * @throws XMLQroxyConfigException
      */
-    public static Config loadFromXml(File configFile) throws XMLQroxyConfigException {
+    public void loadFromXml(File configFile) throws XMLQroxyConfigException {
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             SAXParser saxParser = factory.newSAXParser();
-            Config config = new Config();
-            saxParser.parse(configFile, config);
-
-            return config;
+            saxParser.parse(configFile, this);
         } catch (ParserConfigurationException | SAXException | IOException e) {
             throw new XMLQroxyConfigException("Error while parsing the config file: " + e.getMessage(), e);
         }
@@ -71,12 +79,16 @@ public class Config extends DefaultHandler {
      * Attributs for parsing XML
      */
     boolean qroxyConfigTags;
+    boolean proxyTags;
+    boolean proxyBindAddressTags;
+    boolean proxyBindPortTags;
     boolean webUiTags;
-    boolean bindAddressTags;
-    boolean bindPortTags;
+    boolean cacheBindAddressTags;
+    boolean cacheBindPortTags;
     boolean cacheTags;
     boolean pathTags;
     boolean defaultMaxSizeTags;
+    boolean cacheExchangingMulticastAddressTags;
     boolean categoriesTags;
     boolean categoryTags;
     boolean regexsTags;
@@ -87,8 +99,10 @@ public class Config extends DefaultHandler {
     boolean priorityTags;
     boolean cacheRuleTags;
     boolean maxSizeTags;
-    String bindAddress;
-    int bindPort = DEFAULT_WEBUI_BIND_PORT;
+    String proxyBindAddress;
+    int proxyBindPort = DEFAULT_PROXY_BIND_PORT;
+    String webUiBindAddress;
+    int webUiBindPort = DEFAULT_WEBUI_BIND_PORT;
     String currentCategoryName;
     HashMap<String, String> currentRegexs;
     String currentApplyOn;
@@ -107,18 +121,26 @@ public class Config extends DefaultHandler {
                 throw new SAXException("Invalid file version. Found: " + version + " Expected: " + XML_CONFIG_VERSION.toString());
             }
             qroxyConfigTags = true;
+        } else if (qName.equalsIgnoreCase("proxy")) {
+            proxyTags = true;
+        } else if (qName.equalsIgnoreCase("bindAddress")) {
+            proxyBindAddressTags = true;
+        } else if (qName.equalsIgnoreCase("bindPort")) {
+            proxyBindPortTags = true;
         } else if (qName.equalsIgnoreCase("webUi")) {
             webUiTags = true;
         } else if (qName.equalsIgnoreCase("bindAddress")) {
-            bindAddressTags = true;
+            cacheBindAddressTags = true;
         } else if (qName.equalsIgnoreCase("bindPort")) {
-            bindPortTags = true;
+            cacheBindPortTags = true;
         } else if (qName.equalsIgnoreCase("cache")) {
             cacheTags = true;
         } else if (qName.equalsIgnoreCase("path")) {
             pathTags = true;
         } else if (qName.equalsIgnoreCase("maxDefaultSize")) {
             defaultMaxSizeTags = true;
+        } else if (qName.equalsIgnoreCase("exchangingMulticastAddress")) {
+            cacheExchangingMulticastAddressTags = true;
         } else if (qName.equalsIgnoreCase("categories")) {
             categoriesTags = true;
         } else if (qName.equalsIgnoreCase("category")) {
@@ -147,17 +169,28 @@ public class Config extends DefaultHandler {
 
     @Override
     public void characters(char[] chars, int start, int length) throws SAXException {
-        if (bindAddressTags) {
-            bindAddress = new String(chars, start, length);
-            bindAddressTags = false;
-        } else if (bindPortTags) {
+        if (proxyBindAddressTags) {
+            proxyBindAddress = new String(chars, start, length);
+            proxyBindAddressTags = false;
+        } else if (proxyBindPortTags) {
             String value = new String(chars, start, length);
             try {
-                bindPort = Integer.parseInt(value);
+                proxyBindPort = Integer.parseInt(value);
             } catch (NumberFormatException e) {
                 throw new SAXException("Invalid port number format: " + value, e);
             }
-            bindPortTags = false;
+            proxyBindPortTags = false;
+        } else if (cacheBindAddressTags) {
+            webUiBindAddress = new String(chars, start, length);
+            cacheBindAddressTags = false;
+        } else if (cacheBindPortTags) {
+            String value = new String(chars, start, length);
+            try {
+                webUiBindPort = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                throw new SAXException("Invalid port number format: " + value, e);
+            }
+            cacheBindPortTags = false;
         } else if (defaultMaxSizeTags) {
             String value = new String(chars, start, length);
             try {
@@ -166,6 +199,16 @@ public class Config extends DefaultHandler {
                 throw new SAXException("Invalid cache default max size number format: " + value, e);
             }
             defaultMaxSizeTags = false;
+        } else if (cacheExchangingMulticastAddressTags) {
+            String value = new String(chars, start, length);
+            try {
+                cacheExchangingMulticastAddress = InetAddress.getByName(value);
+            } catch (UnknownHostException e) {
+                throw new SAXException("Invalid cache exchanging multicast address. No IP address for the host could be found, or a scope_id was specified for a global IPv6 address: " + value, e);
+            } catch (SecurityException e) {
+                throw new SAXException("Operation not allowed", e);
+            }
+            cacheExchangingMulticastAddressTags = false;
         } else if (pathTags) {
             cachePath = new String(chars, start, length);
             pathTags = false;
@@ -209,11 +252,17 @@ public class Config extends DefaultHandler {
 
     @Override
     public void endElement(String uri, String localName, String qName) throws SAXException {
-        if (qName.equalsIgnoreCase("webUi") && webUiTags) {
-            if (bindAddress == null) {
-                webUiBindAddress = new InetSocketAddress(bindPort);
+        if (qName.equalsIgnoreCase("proxy") && proxyTags) {
+            if (proxyBindAddress == null) {
+                proxyBindSocketAddress = new InetSocketAddress(proxyBindPort);
             } else {
-                webUiBindAddress = new InetSocketAddress(bindAddress, bindPort);
+                proxyBindSocketAddress = new InetSocketAddress(proxyBindAddress, proxyBindPort);
+            }
+        } else if (qName.equalsIgnoreCase("webUi") && webUiTags) {
+            if (webUiBindAddress == null) {
+                webUiBindSocketAddress = new InetSocketAddress(webUiBindPort);
+            } else {
+                webUiBindSocketAddress = new InetSocketAddress(webUiBindAddress, webUiBindPort);
             }
         } else if (qName.equalsIgnoreCase("qosRule") && qosRuleTags) {
             try {
@@ -234,7 +283,7 @@ public class Config extends DefaultHandler {
     }
 
     public SocketAddress getWebUiBindAddress() {
-        return webUiBindAddress;
+        return webUiBindSocketAddress;
     }
 
     public String getCachePath() {
@@ -247,5 +296,13 @@ public class Config extends DefaultHandler {
 
     public Collection<Category> getCategories() {
         return Collections.unmodifiableCollection(categories);
+    }
+    
+    public InetAddress getCacheExchangingMulticastAddress() {
+        return cacheExchangingMulticastAddress;
+    }
+    
+    public InetSocketAddress getProxyListeningAddress() {
+        return proxyBindSocketAddress;
     }
 }
