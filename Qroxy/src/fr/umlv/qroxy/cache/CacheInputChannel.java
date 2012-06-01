@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 joan
+ * Copyright (C) 2012 Joan Goyeau <joan.goyeau@gmail.com>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  */
 package fr.umlv.qroxy.cache;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -25,13 +26,15 @@ import java.nio.channels.FileChannel;
 
 /**
  *
- * @author joan
+ * @author Joan Goyeau <joan.goyeau@gmail.com>
  */
-public class CacheInputChannel {
+public class CacheInputChannel implements Closeable {
 
+    private File cacheFile;
     private FileChannel cacheFileChannel;
 
     public CacheInputChannel(File cacheFile) throws FileNotFoundException {
+        this.cacheFile = cacheFile;
         this.cacheFileChannel = new FileInputStream(cacheFile).getChannel();
     }
 
@@ -43,7 +46,16 @@ public class CacheInputChannel {
         return cacheFileChannel.isOpen();
     }
 
+    @Override
     public void close() throws IOException {
         cacheFileChannel.close();
+    }
+
+    public void resetPosition() throws IOException {
+        cacheFileChannel.position(0);
+    }
+
+    public File getFile() {
+        return cacheFile;
     }
 }
