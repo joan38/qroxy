@@ -23,40 +23,9 @@ import java.net.URI;
  *
  * @author Guillaume
  */
-class CacheEntry {
-    private final HttpResponseHeader header;
-    private final URI uri;
-    
-    public CacheEntry(HttpResponseHeader header, URI uri) {
-        this.header = header;
-        this.uri = uri;
+class CacheEntryFactory {
+    public CacheEntry createCacheEntry(HttpResponseHeader header, URI uri) {
+        return new CacheEntry(header, uri);
     }
-    
-    public URI getUri() {
-        return uri;
-    }
-    
-    public HttpResponseHeader getHeader() {
-        return header;
-    }
-   
-    @Override
-    public int hashCode() {
-        return 0;
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-        if(o == this) {
-            return true;
-        }
-        if(o == null) {
-            return false;
-        }
-        if(o.getClass() != this.getClass()) {
-            return false;
-        }
-        CacheEntry ce = (CacheEntry)o;
-        return uri.equals(ce.uri);
-    }
+            
 }
