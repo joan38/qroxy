@@ -16,35 +16,15 @@
  */
 package fr.umlv.qroxy.cache;
 
-import fr.umlv.qroxy.http.HttpHeader;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+import java.io.FileNotFoundException;
 
 /**
  *
  * @author Guillaume
  */
-public class CacheInputController {
-    List<URI> uris = new ArrayList<>();
-
-    public static boolean isValid(HttpHeader header) {
-        String cacheControl = header.getCacheControl();
-        int contentLength = header.getContentLength();
-        if(contentLength >= Cache.CACHEABLE_RSRC_MAX_SIZE) {
-            return false;
-        }
-        switch(cacheControl) {
-            case "public":
-                return true;
-            case "private":
-                return false;
-            case "no_cache":
-                return false;
-            case "no-store":
-                return false;
-            default:
-                return false;
-        }
+class CacheInputChannelFactory {
+    public CacheInputChannel createCacheInputeChannel(File file) throws FileNotFoundException {
+        return new CacheInputChannel(file);
     }
 }

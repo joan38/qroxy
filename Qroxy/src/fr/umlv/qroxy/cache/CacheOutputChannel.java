@@ -30,12 +30,9 @@ import java.nio.channels.FileChannel.MapMode;
  * @author Joan Goyeau <joan.goyeau@gmail.com>
  */
 public class CacheOutputChannel implements Closeable, AutoCloseable {
-
-    private final File cacheFile;
-    private FileChannel cacheFileChannel;
+    private final FileChannel cacheFileChannel;
 
     public CacheOutputChannel(File cacheFile) throws FileNotFoundException {
-        this.cacheFile = cacheFile;
         this.cacheFileChannel = new FileOutputStream(cacheFile).getChannel();
     }
 
@@ -55,7 +52,7 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
             HttpResponseHeader responseHeader = HttpResponseHeader.parse(HttpHeader.DECODER.decode(map).toString());
 
             // Preconditions
-            if (responseHeader.getHeaderLength() + responseHeader.getContentLength() != cacheFile.length()) {
+            if (responseHeader.getHeaderLength() + responseHeader.getContentLength() != cacheFileChannel.size()) {
                 throw new CacheException("Writted resource length doesn't equals to the length of the HTTP header");
             }
             if (responseHeader.getLocation() == null) {
@@ -63,13 +60,8 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
             }
         } catch (IOException e) {
             cacheFileChannel.close();
-            cacheFile.delete();
             throw new CacheException("Resource not cached because of a corrupt writing", e);
         }
-    }
-
-    public File getFile() {
-        return cacheFile;
     }
     
     public FileChannel getFileChannel() {

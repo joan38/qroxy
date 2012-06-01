@@ -16,36 +16,15 @@
  */
 package fr.umlv.qroxy.cache;
 
-import java.nio.channels.Channel;
+import java.io.File;
+import java.io.FileNotFoundException;
 
 /**
  *
  * @author Guillaume
  */
-public interface CepInterface {
-    
-    
-    
-    public enum Method {
-        WHOAS {
-            public void handle(Channel c) {
-                // TODO read a WHOAS message
-                // TODO perform an action
-            }
-        },
-        OWN {
-            public void handle(Channel c) {
-                // TODO read a OWN message
-                // TODO perform an action
-            }
-        },
-        GET {
-            public void handle(Channel c) {
-                // TODO read a GET message
-                // TODO perform an action
-            }
-        };
-        
-        public abstract void handle(Channel c);
+class CacheOutputChannelFactory {
+    public CacheOutputChannel createOutputChannel(File file) throws FileNotFoundException {
+        return new CacheOutputChannel(file);
     }
 }
