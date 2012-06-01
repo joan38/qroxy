@@ -23,6 +23,8 @@ import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 /**
  *
@@ -30,6 +32,7 @@ import java.nio.channels.FileChannel;
  */
 public class CacheOutputChannel implements Closeable, AutoCloseable {
 
+    private Path path;
     private FileChannel cacheFileChannel;
     private boolean cachable;
 
@@ -49,7 +52,9 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
 
                 // Ok it's cachable
                 cachable = true;
-                cacheFileChannel = FileChannel.open(path, options);
+                // http://docs.oracle.com/javase/7/docs/api/java/nio/file/StandardOpenOption.html
+                path = ?;
+                cacheFileChannel = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE, StandardOpenOption.READ);
             } catch (HttpMalformedHeaderException e) {
                 if (data.contains("\r\n\r\n")) {
                     throw new CacheException("No response header in this message");
@@ -84,9 +89,5 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
             cacheFileChannel.close();
             throw new CacheException("Resource not cached because of a corrupt writing", e);
         }
-    }
-
-    public FileChannel getFileChannel() {
-        return cacheFileChannel;
     }
 }
