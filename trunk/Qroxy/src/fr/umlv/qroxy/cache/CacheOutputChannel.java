@@ -17,28 +17,20 @@
 package fr.umlv.qroxy.cache;
 
 import fr.umlv.qroxy.config.Config;
+import fr.umlv.qroxy.http.HttpHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
-import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
 
 /**
  *
  * @author Joan Goyeau <joan.goyeau@gmail.com>
  */
-public class CacheOutputChannel implements Closeable {
+public class CacheOutputChannel implements Closeable, AutoCloseable {
 
-    private static final Charset charset = Charset.forName("ISO-8859-1");
-    private static final CharsetDecoder decoder = charset.newDecoder();
     private final File cacheFile;
     private FileChannel cacheFileChannel;
 
@@ -60,11 +52,14 @@ public class CacheOutputChannel implements Closeable {
         // Check if the resource writed successfully
         try {
             MappedByteBuffer map = cacheFileChannel.map(MapMode.READ_ONLY, 0, Config.MAX_HEADER_LENGTH);
-            HttpResponseHeader responseHeader = HttpResponseHeader.parse(decoder.decode(map).toString());
+            HttpResponseHeader responseHeader = HttpResponseHeader.parse(HttpHeader.DECODER.decode(map).toString());
 
             // Preconditions
             if (responseHeader.getHeaderLength() + responseHeader.getContentLength() != cacheFile.length()) {
                 throw new CacheException("Writted resource length doesn't equals to the length of the HTTP header");
+            }
+            if (responseHeader.getLocation() == null) {
+                throw new CacheException("Location header field is required");
             }
         } catch (IOException e) {
             cacheFileChannel.close();
@@ -75,5 +70,9 @@ public class CacheOutputChannel implements Closeable {
 
     public File getFile() {
         return cacheFile;
+    }
+    
+    public FileChannel getFileChannel() {
+        return cacheFileChannel;
     }
 }
