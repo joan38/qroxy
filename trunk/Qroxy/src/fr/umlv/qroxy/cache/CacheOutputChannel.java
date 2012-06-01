@@ -22,9 +22,7 @@ import fr.umlv.qroxy.http.HttpResponseHeader;
 import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
 import java.io.*;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.channels.FileChannel.MapMode;
 
 /**
  *
@@ -32,11 +30,10 @@ import java.nio.channels.FileChannel.MapMode;
  */
 public class CacheOutputChannel implements Closeable, AutoCloseable {
 
-    private final FileChannel cacheFileChannel;
+    private FileChannel cacheFileChannel;
     private boolean cachable;
 
-    public CacheOutputChannel(File cacheFile) throws FileNotFoundException {
-        this.cacheFileChannel = new FileOutputStream(cacheFile).getChannel();
+    public CacheOutputChannel() {
     }
 
     public int write(ByteBuffer src) throws IOException {
@@ -52,9 +49,10 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
 
                 // Ok it's cachable
                 cachable = true;
+                cacheFileChannel = FileChannel.open(path, options);
             } catch (HttpMalformedHeaderException e) {
                 if (data.contains("\r\n\r\n")) {
-                    throw new CacheException("No header in this message");
+                    throw new CacheException("No response header in this message");
                 }
                 return 0;
             }
@@ -71,8 +69,9 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
     public void close() throws IOException {
         // Check if the resource writed successfully
         try {
-            MappedByteBuffer map = cacheFileChannel.map(MapMode.READ_ONLY, 0, Config.MAX_HEADER_LENGTH);
-            HttpResponseHeader responseHeader = HttpResponseHeader.parse(HttpHeader.DECODER.decode(map).toString());
+            ByteBuffer buffer = ByteBuffer.allocate(Config.MAX_HEADER_LENGTH);
+            cacheFileChannel.read(buffer);
+            HttpResponseHeader responseHeader = HttpResponseHeader.parse(HttpHeader.DECODER.decode(buffer).toString());
 
             // Preconditions
             if (responseHeader.getHeaderLength() + responseHeader.getContentLength() != cacheFileChannel.size()) {
