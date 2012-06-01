@@ -18,6 +18,9 @@ package fr.umlv.qroxy.cache;
 
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.net.URI;
 
 /**
  *
@@ -27,6 +30,7 @@ public class CacheProxy implements CacheAccess {
     private final CacheInputControler cacheInputControler = new CacheInputControler();
     private final CacheInputChannelFactory inputChannelFactory = new CacheInputChannelFactory();
     private final CacheOutputChannelFactory outputChannelFactory = new CacheOutputChannelFactory();
+    private final CacheEntryFactory cacheEntryFactory = new CacheEntryFactory();
     private final Cache cache;
 
     public CacheProxy(Cache cache) {
@@ -35,17 +39,27 @@ public class CacheProxy implements CacheAccess {
     
     @Override
     public CacheInputChannel getResource(HttpRequestHeader requestHeader) throws CacheException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        File f = cache.getCacheEntry(cacheEntryFactory.createCacheEntry(null, requestHeader.getUri()));
+        try {
+            return inputChannelFactory.createCacheInputeChannel(f);
+        } catch(FileNotFoundException e) {
+            throw new CacheException(e.getMessage(), e.getCause());
+        }
     }
 
-    @Override
-    public CacheOutputChannel cacheResource(HttpResponseHeader responseHeader) throws CacheException {
-        boolean cacheable = cacheInputControler.isCacheable(responseHeader);
-        if(cacheable) {
-            cache.put(responseHeader);
+    //@Override
+    public CacheOutputChannel cacheResource(HttpResponseHeader responseHeader, URI uri) throws CacheException {
+        try {
+            boolean cacheable = cacheInputControler.isCacheable(responseHeader);
+            File file;
+            if(!cacheable) {
+                throw new CacheException("Ressource not cacheable");
+            }
+            file = cache.getCacheEntry(new CacheEntry(responseHeader, uri));
+            return outputChannelFactory.createOutputChannel(file);
+        } catch(FileNotFoundException e) {
+            throw new CacheException(e.getMessage(), e.getCause());
         }
-        return cache
-        
     }
 
     @Override
