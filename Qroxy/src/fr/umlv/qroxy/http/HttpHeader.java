@@ -19,9 +19,12 @@ package fr.umlv.qroxy.http;
 import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
 import fr.umlv.qroxy.http.exceptions.HttpPreconditionFailedException;
 import fr.umlv.qroxy.http.exceptions.HttpUnsupportedVersionException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * ava.net.URI; import java.net.URISyntaxException; import java.net.URL; import
@@ -32,10 +35,10 @@ import java.util.*;
  */
 public abstract class HttpHeader {
 
-    protected final static SimpleDateFormat dateFormater = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-    protected final String stringHeader;
-    protected final int headerLength;
-    ContentTransferMethod contentTransferMethod;
+    public static final Charset CHARSET = Charset.forName("ISO-8859-1");
+    public static final CharsetDecoder DECODER = CHARSET.newDecoder();
+    public static final SimpleDateFormat HTTP_DATE_FORMATER = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+    ContentTransferMode contentTransferMethod;
     /**
      * <b>HTTP Version (see section 3.1 in RFC 2616)
      */
@@ -82,16 +85,12 @@ public abstract class HttpHeader {
      */
     protected HashMap<String, String> extensionHeader = new HashMap<>();
 
-    protected HttpHeader(String stringHeader) throws HttpMalformedHeaderException {        
+    protected HttpHeader(String stringHeader) throws HttpMalformedHeaderException {
         // Cut the message body
         int endOfHeader = stringHeader.indexOf("\r\n\r\n");
         if (endOfHeader == -1) {
             throw new HttpMalformedHeaderException("No HTTP header reconised");
         }
-        this.stringHeader = stringHeader.substring(0, endOfHeader) + "\r\n\r\n";
-        
-        // Set the length of the header
-        this.headerLength = this.stringHeader.length();
     }
 
     public static HttpHeader parse(String httpMessage) throws HttpMalformedHeaderException {
@@ -149,7 +148,7 @@ public abstract class HttpHeader {
                 return true;
             case "Date":
                 try {
-                    date = dateFormater.parse(fieldValue);
+                    date = HTTP_DATE_FORMATER.parse(fieldValue);
                 } catch (ParseException e) {
                     throw new HttpPreconditionFailedException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
                 }
@@ -219,14 +218,14 @@ public abstract class HttpHeader {
                 return;
             case "Expires":
                 try {
-                    expires = dateFormater.parse(fieldValue);
+                    expires = HTTP_DATE_FORMATER.parse(fieldValue);
                 } catch (ParseException e) {
                     throw new HttpPreconditionFailedException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
                 }
                 return;
             case "Last-Modified":
                 try {
-                    lastModified = dateFormater.parse(fieldValue);
+                    lastModified = HTTP_DATE_FORMATER.parse(fieldValue);
                 } catch (ParseException e) {
                     throw new HttpPreconditionFailedException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
                 }
@@ -244,10 +243,66 @@ public abstract class HttpHeader {
      *
      * @return
      */
-    abstract public ContentTransferMethod contentTransferMethod();
+    public abstract ContentTransferMode contentTransferMode();
+
+    @Override
+    public abstract String toString();
+    
+    protected String toStringGeneralFields() {
+        return "";
+        
+//    protected String cacheControl;
+//    protected String connection;
+//    protected Date date;
+//    protected String pragma;
+//    protected String trailer;
+//    protected String transferEncoding;
+//    protected String upgrade;
+//    protected String via;
+//    protected String warning;
+    }
+    
+    protected String toStringEntityFields() {
+        StringBuilder fields = new StringBuilder();
+        if (allow != null) {
+            fields.append("Allow: ").append(allow).append("\r\n");
+        }
+        if (contentEncoding != null) {
+            fields.append("Content-Encoding: ").append(contentEncoding).append("\r\n");
+        }
+        if (contentLanguage != null) {
+            fields.append("Content-Language: ").append(contentLanguage).append("\r\n");
+        }
+        if (contentLength != null) {
+            fields.append("Content-Length: ").append(contentLength).append("\r\n");
+        }
+        if (contentLocation != null) {
+            fields.append("Content-Location: ").append(contentLocation).append("\r\n");
+        }
+        if (contentMD5 != null) {
+            fields.append("Content-MD5: ").append(contentMD5).append("\r\n");
+        }
+        if (contentRange != null) {
+            fields.append("Content-Range: ").append(contentRange).append("\r\n");
+        }
+        if (contentType != null) {
+            fields.append("Content-Type: ").append(contentType).append("\r\n");
+        }
+        if (expires != null) {
+            fields.append("Expires: ").append(expires).append("\r\n");
+        }
+        if (lastModified != null) {
+            fields.append("Last-Modified: ").append(lastModified).append("\r\n");
+        }
+        for (Entry field : extensionHeader.entrySet()) {
+            fields.append(field.getKey()). append(": ").append(field.getValue()).append("\r\n");
+            
+        }
+        return fields.toString();
+    }
 
     public int getHeaderLength() {
-        return headerLength;
+        return toString().length();
     }
 
     public String getAllow() {
@@ -292,10 +347,6 @@ public abstract class HttpHeader {
 
     public Date getDate() {
         return date;
-    }
-
-    public static SimpleDateFormat getDateFormater() {
-        return dateFormater;
     }
 
     public Date getExpires() {
@@ -345,10 +396,5 @@ public abstract class HttpHeader {
 
     public String getWarning() {
         return warning;
-    }
-    
-    @Override
-    public String toString() {
-        return stringHeader;
     }
 }
