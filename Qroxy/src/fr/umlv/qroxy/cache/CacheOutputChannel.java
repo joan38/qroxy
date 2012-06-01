@@ -19,6 +19,7 @@ package fr.umlv.qroxy.cache;
 import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.http.HttpHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
+import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -30,13 +31,35 @@ import java.nio.channels.FileChannel.MapMode;
  * @author Joan Goyeau <joan.goyeau@gmail.com>
  */
 public class CacheOutputChannel implements Closeable, AutoCloseable {
+
     private final FileChannel cacheFileChannel;
+    private boolean cachable;
 
     public CacheOutputChannel(File cacheFile) throws FileNotFoundException {
         this.cacheFileChannel = new FileOutputStream(cacheFile).getChannel();
     }
 
     public int write(ByteBuffer src) throws IOException {
+        if (!cachable) {
+            // Check if it's cachable
+            String data = HttpHeader.DECODER.decode(src).toString();
+            try {
+                HttpResponseHeader responseHeader = HttpResponseHeader.parse(data);
+                // Preconditions for caching
+
+                // Si c'est pas cachable
+                // throw new CacheException("C'est pas cachable !!!!! Pk ?");
+
+                // Ok it's cachable
+                cachable = true;
+            } catch (HttpMalformedHeaderException e) {
+                if (data.contains("\r\n\r\n")) {
+                    throw new CacheException("No header in this message");
+                }
+                return 0;
+            }
+        }
+
         return cacheFileChannel.write(src);
     }
 
@@ -63,7 +86,7 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
             throw new CacheException("Resource not cached because of a corrupt writing", e);
         }
     }
-    
+
     public FileChannel getFileChannel() {
         return cacheFileChannel;
     }
