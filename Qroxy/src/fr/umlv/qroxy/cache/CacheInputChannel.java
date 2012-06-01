@@ -19,6 +19,8 @@ package fr.umlv.qroxy.cache;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 /**
  *
@@ -27,8 +29,8 @@ import java.nio.channels.FileChannel;
 public class CacheInputChannel implements Closeable, AutoCloseable {
     private final FileChannel cacheFileChannel;
 
-    public CacheInputChannel(File cacheFile) throws FileNotFoundException {
-        this.cacheFileChannel = new FileInputStream(cacheFile).getChannel();
+    public CacheInputChannel(Path cachePath) throws IOException {
+        this.cacheFileChannel = FileChannel.open(cachePath, StandardOpenOption.READ);
     }
 
     public int read(ByteBuffer src) throws IOException {
@@ -46,9 +48,5 @@ public class CacheInputChannel implements Closeable, AutoCloseable {
 
     public void resetPosition() throws IOException {
         cacheFileChannel.position(0);
-    }
-
-    public FileChannel getFileChannel() {
-        return cacheFileChannel;
     }
 }
