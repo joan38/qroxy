@@ -21,7 +21,7 @@ package fr.umlv.qroxy.http;
  *
  * @author Joan Goyeau <joan.goyeau@gmail.com>
  */
-public enum ContentTransferMethod {
+public enum ContentTransferMode {
     NO_CONTENT,
     CONTENT_LENGTH,
     CONNECTION_CLOSE,

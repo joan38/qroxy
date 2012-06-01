@@ -23,8 +23,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
 import java.util.Map.Entry;
+import java.util.*;
 
 /**
  * ava.net.URI; import java.net.URISyntaxException; import java.net.URL; import
@@ -37,7 +37,7 @@ public abstract class HttpHeader {
 
     public static final Charset CHARSET = Charset.forName("ISO-8859-1");
     public static final CharsetDecoder DECODER = CHARSET.newDecoder();
-    public static final SimpleDateFormat HTTP_DATE_FORMATER = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
+    public static final SimpleDateFormat DATE_FORMATER = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
     ContentTransferMode contentTransferMethod;
     /**
      * <b>HTTP Version (see section 3.1 in RFC 2616)
@@ -148,7 +148,7 @@ public abstract class HttpHeader {
                 return true;
             case "Date":
                 try {
-                    date = HTTP_DATE_FORMATER.parse(fieldValue);
+                    date = DATE_FORMATER.parse(fieldValue);
                 } catch (ParseException e) {
                     throw new HttpPreconditionFailedException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
                 }
@@ -218,14 +218,14 @@ public abstract class HttpHeader {
                 return;
             case "Expires":
                 try {
-                    expires = HTTP_DATE_FORMATER.parse(fieldValue);
+                    expires = DATE_FORMATER.parse(fieldValue);
                 } catch (ParseException e) {
                     throw new HttpPreconditionFailedException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
                 }
                 return;
             case "Last-Modified":
                 try {
-                    lastModified = HTTP_DATE_FORMATER.parse(fieldValue);
+                    lastModified = DATE_FORMATER.parse(fieldValue);
                 } catch (ParseException e) {
                     throw new HttpPreconditionFailedException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
                 }
@@ -249,17 +249,35 @@ public abstract class HttpHeader {
     public abstract String toString();
     
     protected String toStringGeneralFields() {
-        return "";
-        
-//    protected String cacheControl;
-//    protected String connection;
-//    protected Date date;
-//    protected String pragma;
-//    protected String trailer;
-//    protected String transferEncoding;
-//    protected String upgrade;
-//    protected String via;
-//    protected String warning;
+        StringBuilder fields = new StringBuilder();
+        if (cacheControl != null) {
+            fields.append("Cache-Control: ").append(cacheControl).append("\r\n");
+        }
+        if (connection != null) {
+            fields.append("Connection: ").append(connection).append("\r\n");
+        }
+        if (date != null) {
+            fields.append("Date: ").append(DATE_FORMATER.format(date)).append("\r\n");
+        }
+        if (pragma != null) {
+            fields.append("Pragma: ").append(pragma).append("\r\n");
+        }
+        if (trailer != null) {
+            fields.append("Trailer: ").append(trailer).append("\r\n");
+        }
+        if (transferEncoding != null) {
+            fields.append("Transfer-Encoding: ").append(transferEncoding).append("\r\n");
+        }
+        if (upgrade != null) {
+            fields.append("Upgrade: ").append(upgrade).append("\r\n");
+        }
+        if (via != null) {
+            fields.append("Via: ").append(via).append("\r\n");
+        }
+        if (warning != null) {
+            fields.append("Warning: ").append(warning).append("\r\n");
+        }
+        return fields.toString();
     }
     
     protected String toStringEntityFields() {
@@ -289,14 +307,13 @@ public abstract class HttpHeader {
             fields.append("Content-Type: ").append(contentType).append("\r\n");
         }
         if (expires != null) {
-            fields.append("Expires: ").append(expires).append("\r\n");
+            fields.append("Expires: ").append(DATE_FORMATER.format(expires)).append("\r\n");
         }
         if (lastModified != null) {
             fields.append("Last-Modified: ").append(lastModified).append("\r\n");
         }
         for (Entry field : extensionHeader.entrySet()) {
             fields.append(field.getKey()). append(": ").append(field.getValue()).append("\r\n");
-            
         }
         return fields.toString();
     }
