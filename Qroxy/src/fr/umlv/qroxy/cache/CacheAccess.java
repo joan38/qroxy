@@ -40,11 +40,10 @@ public interface CacheAccess {
     /**
      * Cache resource
      * 
-     * @param responseHeader
      * @return The FileOutputStream were to cache the resource
      * @throws CacheException If the HttpRequestHeader doesn't match preconditions.
      */
-    public CacheOutputChannel cacheResource(HttpResponseHeader responseHeader) throws CacheException;
+    public CacheOutputChannel cacheResource() throws CacheException;
     
     /**
      * Advertise a corrupt resource.
