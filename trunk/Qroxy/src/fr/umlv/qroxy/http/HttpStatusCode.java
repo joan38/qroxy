@@ -16,9 +16,7 @@
  */
 package fr.umlv.qroxy.http;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Locale;
 
 /**
  * Status Code Definitions (see section 10 in RFC 2616).
@@ -63,7 +61,18 @@ public enum HttpStatusCode {
      * (RFC 2616) for detailed discussion of the use and handling of this status
      * code.
      */
-    CONTINUE(100, "Continue"),
+    CONTINUE(100, "Continue") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>101 Switching Protocols</b><p>
      *
@@ -79,7 +88,31 @@ public enum HttpStatusCode {
      * older versions, and switching to a real-time, synchronous protocol might
      * be advantageous when delivering resources that use such features.
      */
-    SWITCHING_PROTOCOLS(101, "Switching Protocols"),
+    SWITCHING_PROTOCOLS(101, "Switching Protocols") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
+    /**
+     * <b>103 OWN</b><p>
+     *
+     * Cache answer that we own a resource Fields Location is required in this
+     * answer. ETag, Date and Expires are required if we own the information.
+     */
+    OWN(103, "OWN") {
+
+        @Override
+        public String getHttpResponse() {
+            return null;
+        }
+    },
     /**
      * <b>Successful 2xx</b><p>
      *
@@ -109,7 +142,18 @@ public enum HttpStatusCode {
      * TRACE an entity containing the request message as received by the end
      * server.
      */
-    OK(200, "OK"),
+    OK(200, "OK") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>201 Created</b><p>
      *
@@ -129,7 +173,18 @@ public enum HttpStatusCode {
      * current value of the entity tag for the requested variant just created,
      * see section 14.19 (RFC 2616).
      */
-    CREATED(201, "Created"),
+    CREATED(201, "Created") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>202 Accepted</b><p>
      *
@@ -148,7 +203,18 @@ public enum HttpStatusCode {
      * status monitor or some estimate of when the user can expect the request
      * to be fulfilled.
      */
-    ACCEPTED(202, "Accepted"),
+    ACCEPTED(202, "Accepted") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>203 Non-Authoritative Information</b><p>
      *
@@ -160,7 +226,18 @@ public enum HttpStatusCode {
      * known by the origin server. Use of this response code is not required and
      * is only appropriate when the response would otherwise be 200 (OK).
      */
-    NON_AUTHORITATIVE_INFORMATION(203, "Non-Authoritative Information"),
+    NON_AUTHORITATIVE_INFORMATION(203, "Non-Authoritative Information") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>204 No Content</b><p>
      *
@@ -180,7 +257,18 @@ public enum HttpStatusCode {
      * The 204 response MUST NOT include a message-body, and thus is always
      * terminated by the first empty line after the header fields.
      */
-    NO_CONTENT(204, "No Content"),
+    NO_CONTENT(204, "No Content") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>205 Reset Content</b><p>
      *
@@ -191,7 +279,18 @@ public enum HttpStatusCode {
      * that the user can easily initiate another input action. The response MUST
      * NOT include an entity.
      */
-    RESET_CONTENT(205, "Reset Content"),
+    RESET_CONTENT(205, "Reset Content") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>206 Partial Content</b><p>
      *
@@ -232,7 +331,18 @@ public enum HttpStatusCode {
      * A cache that does not support the Range and Content-Range headers MUST
      * NOT cache 206 (Partial) responses.
      */
-    PARTIAL_CONTENT(206, "Partial Content"),
+    PARTIAL_CONTENT(206, "Partial Content") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>Redirection 3xx</b><p>
      *
@@ -270,7 +380,18 @@ public enum HttpStatusCode {
      * agents MAY use the Location field value for automatic redirection. This
      * response is cacheable unless indicated otherwise.
      */
-    MULTIPLE_CHOICES(300, "Multiple Choices"),
+    MULTIPLE_CHOICES(300, "Multiple Choices") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>301 Moved Permanently</b><p>
      *
@@ -294,7 +415,18 @@ public enum HttpStatusCode {
      * status code, some existing HTTP/1.0 user agents will erroneously change
      * it into a GET request.
      */
-    MOVED_PERMANENTLY(301, "Moved Permanently"),
+    MOVED_PERMANENTLY(301, "Moved Permanently") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>302 Found</b><p>
      *
@@ -320,7 +452,18 @@ public enum HttpStatusCode {
      * wish to make unambiguously clear which kind of reaction is expected of
      * the client.
      */
-    FOUND(302, "Found"),
+    FOUND(302, "Found") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>303 See Other</b><p>
      *
@@ -341,7 +484,18 @@ public enum HttpStatusCode {
      * may be used instead, since most user agents react to a 302 response as
      * described here for 303.
      */
-    SEE_OTHER(303, "See Other"),
+    SEE_OTHER(303, "See Other") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>304 Not Modified</b><p>
      *
@@ -379,7 +533,18 @@ public enum HttpStatusCode {
      * cache MUST update the entry to reflect any new field values given in the
      * response.
      */
-    NOT_MODIFIED(304, "Not Modified"),
+    NOT_MODIFIED(304, "Not Modified") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>305 Use Proxy</b><p>
      *
@@ -392,7 +557,18 @@ public enum HttpStatusCode {
      * request, and to be generated by origin servers only. Not observing these
      * limitations has significant security consequences.
      */
-    USE_PROXY(305, "Use Proxy"),
+    USE_PROXY(305, "Use Proxy") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>306 (Unused)</b><p>
      *
@@ -420,7 +596,18 @@ public enum HttpStatusCode {
      * unless it can be confirmed by the user, since this might change the
      * conditions under which the request was issued.
      */
-    TEMPORARY_REDIRECT(307, "Temporary Redirect"),
+    TEMPORARY_REDIRECT(307, "Temporary Redirect") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>Client Error 4xx</b><p>
      *
@@ -445,7 +632,18 @@ public enum HttpStatusCode {
      * The request could not be understood by the server due to malformed
      * syntax. The client SHOULD NOT repeat the request without modifications.
      */
-    BAD_REQUEST(400, "Bad Request"),
+    BAD_REQUEST(400, "Bad Request") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>401 Unauthorized</b><p>
      *
@@ -462,13 +660,35 @@ public enum HttpStatusCode {
      * information. HTTP access authentication is explained in "HTTP
      * Authentication: Basic and Digest Access Authentication".
      */
-    UNAUTHORIZED(401, "Unauthorized"),
+    UNAUTHORIZED(401, "Unauthorized") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>402 Payment Required</b><p>
      *
      * This code is reserved for future use.
      */
-    PAYMENT_REQUIRED(402, "Payment Required"),
+    PAYMENT_REQUIRED(402, "Payment Required") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>403 Forbidden</b><p>
      *
@@ -480,7 +700,18 @@ public enum HttpStatusCode {
      * information available to the client, the status code 404 (Not Found) can
      * be used instead.
      */
-    FORBIDDEN(403, "Forbidden"),
+    FORBIDDEN(403, "Forbidden") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>404 Not Found</b><p>
      *
@@ -492,7 +723,18 @@ public enum HttpStatusCode {
      * used when the server does not wish to reveal exactly why the request has
      * been refused, or when no other response is applicable.
      */
-    NOT_FOUND(404, "Not Found"),
+    NOT_FOUND(404, "Not Found") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>405 Method Not Allowed</b><p>
      *
@@ -500,7 +742,18 @@ public enum HttpStatusCode {
      * identified by the Request-URI. The response MUST include an Allow header
      * containing a list of valid methods for the requested resource.
      */
-    METHOD_NOT_ALLOWED(405, "Method Not Allowed"),
+    METHOD_NOT_ALLOWED(405, "Method Not Allowed") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>406 Not Acceptable</b><p>
      *
@@ -527,7 +780,18 @@ public enum HttpStatusCode {
      * stop receipt of more data and query the user for a decision on further
      * actions.
      */
-    NOT_ACCEPTABLE(406, "Not Acceptable"),
+    NOT_ACCEPTABLE(406, "Not Acceptable") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>407 Proxy Authentication Required</b><p>
      *
@@ -539,7 +803,18 @@ public enum HttpStatusCode {
      * 14.34 RFC 2616). HTTP access authentication is explained in "HTTP
      * Authentication: Basic and Digest Access Authentication"
      */
-    PROXY_AUTHENTICATION_REQUIRED(407, "Proxy Authentication Required"),
+    PROXY_AUTHENTICATION_REQUIRED(407, "Proxy Authentication Required") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>408 Request Timeout</b><p>
      *
@@ -547,7 +822,18 @@ public enum HttpStatusCode {
      * prepared to wait. The client MAY repeat the request without modifications
      * at any later time.
      */
-    REQUEST_TIMEOUT(408, "Request Timeout"),
+    REQUEST_TIMEOUT(408, "Request Timeout") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>409 Conflict</b><p>
      *
@@ -556,7 +842,18 @@ public enum HttpStatusCode {
      * is expected that the user might be able to resolve the conflict and
      * resubmit the request. The response body SHOULD include enough
      */
-    CONFLICT(409, "Conflict"),
+    CONFLICT(409, "Conflict") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>410 Gone</b><p>
      *
@@ -577,7 +874,18 @@ public enum HttpStatusCode {
      * unavailable resources as "gone" or to keep the mark for any length of
      * time -- that is left to the discretion of the server owner.
      */
-    GONE(410, "Gone"),
+    GONE(410, "Gone") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>411 Length Required</b><p>
      *
@@ -586,7 +894,18 @@ public enum HttpStatusCode {
      * Content-Length header field containing the length of the message-body in
      * the request message.
      */
-    LENGTH_REQUIRED(411, "Length Required"),
+    LENGTH_REQUIRED(411, "Length Required") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>412 Precondition Failed</b><p>
      *
@@ -596,7 +915,18 @@ public enum HttpStatusCode {
      * metainformation (header field data) and thus prevent the requested method
      * from being applied to a resource other than the one intended.
      */
-    PRECONDITION_FAILED(412, "Precondition Failed"),
+    PRECONDITION_FAILED(412, "Precondition Failed") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>413 Request Entity Too Large</b><p>
      *
@@ -608,7 +938,18 @@ public enum HttpStatusCode {
      * header field to indicate that it is temporary and after what time the
      * client MAY try again.
      */
-    REQUEST_ENTITY_TOO_LARGE(413, "Request Entity Too Large"),
+    REQUEST_ENTITY_TOO_LARGE(413, "Request Entity Too Large") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>414 Request-URI Too Long</b><p>
      *
@@ -622,7 +963,18 @@ public enum HttpStatusCode {
      * servers using fixed-length buffers for reading or manipulating the
      * Request-URI.
      */
-    REQUEST_URI_TOO_LONG(414, "Request-URI Too Long"),
+    REQUEST_URI_TOO_LONG(414, "Request-URI Too Long") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>415 Unsupported Media Type</b><p>
      *
@@ -630,7 +982,18 @@ public enum HttpStatusCode {
      * request is in a format not supported by the requested resource for the
      * requested method.
      */
-    UNSUPPORTED_MEDIA_TYPE(415, "Unsupported Media Type"),
+    UNSUPPORTED_MEDIA_TYPE(415, "Unsupported Media Type") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>416 Requested Range Not Satisfiable</b><p>
      *
@@ -647,7 +1010,18 @@ public enum HttpStatusCode {
      * length of the selected resource (see section 14.16 RFC 2616). This
      * response MUST NOT use the multipart/byteranges content- type.
      */
-    REQUESTED_RANGE_NOT_SATISFIABLE(416, "Requested Range Not Satisfiable"),
+    REQUESTED_RANGE_NOT_SATISFIABLE(416, "Requested Range Not Satisfiable") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>417 Expectation Failed</b><p>
      *
@@ -656,7 +1030,18 @@ public enum HttpStatusCode {
      * server has unambiguous evidence that the request could not be met by the
      * next-hop server.
      */
-    EXPECTATION_FAILED(417, "Expectation Failed"),
+    EXPECTATION_FAILED(417, "Expectation Failed") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>Server Error 5xx</b><p>
      *
@@ -674,7 +1059,18 @@ public enum HttpStatusCode {
      * The server encountered an unexpected condition which prevented it from
      * fulfilling the request.
      */
-    INTERNAL_SERVER_ERROR(500, "Internal Server Error"),
+    INTERNAL_SERVER_ERROR(500, "Internal Server Error") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>501 Not Implemented</b><p>
      *
@@ -683,7 +1079,18 @@ public enum HttpStatusCode {
      * recognize the request method and is not capable of supporting it for any
      * resource.
      */
-    NOT_IMPLEMENTED(501, "Not Implemented"),
+    NOT_IMPLEMENTED(501, "Not Implemented") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>502 Bad Gateway</b><p>
      *
@@ -691,7 +1098,18 @@ public enum HttpStatusCode {
      * response from the upstream server it accessed in attempting to fulfill
      * the request.
      */
-    BAD_GATWAY(502, "Bad Gateway"),
+    BAD_GATWAY(502, "Bad Gateway") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>503 Service Unavailable</b><p>
      *
@@ -706,7 +1124,18 @@ public enum HttpStatusCode {
      * must use it when becoming overloaded. Some servers may wish to simply
      * refuse the connection.
      */
-    SERVICE_UNAVAILABLE(503, "Service Unavailable"),
+    SERVICE_UNAVAILABLE(503, "Service Unavailable") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>504 Gateway Timeout</b><p>
      *
@@ -718,7 +1147,18 @@ public enum HttpStatusCode {
      * Note: Note to implementors: some deployed proxies are known to return 400
      * or 500 when DNS lookups time out.
      */
-    GATWAY_TIMEOUT(504, "Gateway Timeout"),
+    GATWAY_TIMEOUT(504, "Gateway Timeout") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    },
     /**
      * <b>505 HTTP Version Not Supported</b><p>
      *
@@ -730,10 +1170,20 @@ public enum HttpStatusCode {
      * describing why that version is not supported and what other protocols are
      * supported by that server.
      */
-    HTTP_VERSION_NOT_SUPPORTED(505, "HTTP Version Not Supported");
-    private final static SimpleDateFormat dateFormater = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.US);
-    private int statusCode;
-    private String message;
+    HTTP_VERSION_NOT_SUPPORTED(505, "HTTP Version Not Supported") {
+
+        @Override
+        public String getHttpResponse() {
+            return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
+                    + "Date: " + HttpHeader.DATE_FORMATER.format(new Date())
+                    + "Connection: close\r\n"
+                    + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+                    + "\r\n"
+                    + statusCode + " " + message;
+        }
+    };
+    protected int statusCode;
+    protected String message;
 
     private HttpStatusCode(int statusCode, String message) {
         this.statusCode = statusCode;
@@ -749,16 +1199,6 @@ public enum HttpStatusCode {
         return null;
     }
 
-    public String getHttpResponse() {
-        return HttpVersion.HTTP_1_1.toString() + " " + statusCode + " " + message + "\r\n"
-                + "Date: " + dateFormater.format(new Date())
-                + "Server: Qroxy"
-                + "Connection: close\r\n"
-                + "Cache-Control: no-cache, no-store, must-revalidate\r\n"
-                + "\r\n"
-                + statusCode + " " + message;
-    }
-
     public int getStatusCode() {
         return statusCode;
     }
@@ -766,4 +1206,6 @@ public enum HttpStatusCode {
     public String getMessage() {
         return message;
     }
+
+    public abstract String getHttpResponse();
 }

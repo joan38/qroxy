@@ -17,6 +17,8 @@
 package fr.umlv.qroxy.http;
 
 import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.StringTokenizer;
@@ -51,13 +53,13 @@ public class HttpResponseHeader extends HttpHeader {
     protected String acceptRanges;
     protected String age;
     protected String eTag;
-    protected String location;
+    protected URI location;
     protected String proxyAuthenticate;
     protected String retryAfter;
     protected String server;
     protected String vary;
     protected String wwwAuthenticate;
-    
+
     private HttpResponseHeader(String stringHeader) throws HttpMalformedHeaderException {
         super(stringHeader);
     }
@@ -72,7 +74,7 @@ public class HttpResponseHeader extends HttpHeader {
     public static HttpResponseHeader parse(String httpResponseMessage) throws HttpMalformedHeaderException {
         Objects.requireNonNull(httpResponseMessage);
         HttpResponseHeader httpHeader = new HttpResponseHeader(httpResponseMessage);
-        StringTokenizer stringTokenizer = new StringTokenizer(httpHeader.stringHeader);
+        StringTokenizer stringTokenizer = new StringTokenizer(httpResponseMessage);
 
         // Status-Line (see section 6.1 in RFC 2616)
         try {
@@ -115,7 +117,7 @@ public class HttpResponseHeader extends HttpHeader {
         return httpHeader;
     }
 
-    private boolean setResponseHeaderField(String fieldName, String fieldValue) {
+    private boolean setResponseHeaderField(String fieldName, String fieldValue) throws HttpMalformedHeaderException {
         switch (fieldName) {
             case "Accept-Ranges":
                 acceptRanges = fieldValue;
@@ -127,7 +129,20 @@ public class HttpResponseHeader extends HttpHeader {
                 eTag = fieldValue;
                 return true;
             case "Location":
-                location = fieldValue;
+                try {
+                    location = new URI(fieldValue);
+                    if (location.getPort() == -1) {
+                        location = new URI(location.getScheme(),
+                                location.getUserInfo(),
+                                location.getHost(),
+                                80,
+                                location.getPath(),
+                                location.getQuery(),
+                                location.getFragment());
+                    }
+                } catch (URISyntaxException e) {
+                    throw new HttpMalformedHeaderException("Invalid location URI (see section 14.30 in RFC 2616)", e);
+                }
                 return true;
             case "Proxy-Authenticate":
                 proxyAuthenticate = fieldValue;
@@ -150,19 +165,19 @@ public class HttpResponseHeader extends HttpHeader {
     }
 
     @Override
-    public ContentTransferMethod contentTransferMethod() {
+    public ContentTransferMode contentTransferMode() {
         if (contentTransferMethod != null) {
             return contentTransferMethod;
         }
 
         if (contentLength != null) {
-            contentTransferMethod = ContentTransferMethod.CONTENT_LENGTH;
+            contentTransferMethod = ContentTransferMode.CONTENT_LENGTH;
         } else if (contentLength == null && transferEncoding != null && !transferEncoding.equals("identity")) {
-            contentTransferMethod = ContentTransferMethod.CHUNKED;
-        } else if (contentLength == null && !"chunked".equals(transferEncoding)) {
-            contentTransferMethod = ContentTransferMethod.CONNECTION_CLOSE;
+            contentTransferMethod = ContentTransferMode.CHUNKED;
+        } else if (contentLength == null && !"chunked".equals(transferEncoding) && "close".equals(connection)) {
+            contentTransferMethod = ContentTransferMode.CONNECTION_CLOSE;
         } else {
-            contentTransferMethod = ContentTransferMethod.NO_CONTENT;
+            contentTransferMethod = ContentTransferMode.NO_CONTENT;
         }
 
         return contentTransferMethod;
@@ -176,7 +191,7 @@ public class HttpResponseHeader extends HttpHeader {
         return age;
     }
 
-    public String geteTag() {
+    public String getETag() {
         return eTag;
     }
 
@@ -203,7 +218,7 @@ public class HttpResponseHeader extends HttpHeader {
         return extensionStatusCode;
     }
 
-    public String getLocation() {
+    public URI getLocation() {
         return location;
     }
 
@@ -225,5 +240,40 @@ public class HttpResponseHeader extends HttpHeader {
 
     public String getWwwAuthenticate() {
         return wwwAuthenticate;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder header = new StringBuilder(version.toString()).append(" ").append(new Integer(statusCode.getStatusCode())).append("\r\n");
+        header.append(toStringGeneralFields());
+        if (acceptRanges != null) {
+            header.append("Accept-Ranges: ").append(acceptRanges).append("\r\n");
+        }
+        if (age != null) {
+            header.append("Age: ").append(age).append("\r\n");
+        }
+        if (eTag != null) {
+            header.append("ETag: ").append(eTag).append("\r\n");
+        }
+        if (location != null) {
+            header.append("Location: ").append(location).append("\r\n");
+        }
+        if (proxyAuthenticate != null) {
+            header.append("Proxy-Authenticate: ").append(proxyAuthenticate).append("\r\n");
+        }
+        if (retryAfter != null) {
+            header.append("Retry-After: ").append(retryAfter).append("\r\n");
+        }
+        if (server != null) {
+            header.append("Server: ").append(server).append("\r\n");
+        }
+        if (vary != null) {
+            header.append("Vary: ").append(vary).append("\r\n");
+        }
+        if (wwwAuthenticate != null) {
+            header.append("WWW-Authenticate: ").append(wwwAuthenticate).append("\r\n");
+        }
+        header.append(toStringEntityFields());
+        return header.append("\r\n").toString();
     }
 }

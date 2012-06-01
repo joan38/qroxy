@@ -79,7 +79,7 @@ public class HttpRequestHeader extends HttpHeader {
     public static HttpRequestHeader parse(String httpRequestMessage) throws HttpMalformedHeaderException {
         Objects.requireNonNull(httpRequestMessage);
         HttpRequestHeader httpHeader = new HttpRequestHeader(httpRequestMessage);
-        StringTokenizer stringTokenizer = new StringTokenizer(httpHeader.stringHeader);
+        StringTokenizer stringTokenizer = new StringTokenizer(httpRequestMessage);
 
         // Request-Line (see section 5.1 in RFC 2616)
         try {
@@ -163,7 +163,7 @@ public class HttpRequestHeader extends HttpHeader {
                 return true;
             case "If-Modified-Since":
                 try {
-                    ifModifiedSince = dateFormater.parse(fieldValue);
+                    ifModifiedSince = HttpHeader.DATE_FORMATER.parse(fieldValue);
                 } catch (ParseException e) {
                     throw new HttpPreconditionFailedException("Invalid date format of the field " + fieldName + ": " + fieldValue, e);
                 }
@@ -222,7 +222,7 @@ public class HttpRequestHeader extends HttpHeader {
                         return false;
                     }
                 case "Date":
-                    if (!(date == null ? "" : dateFormater.format(date)).matches(entry.getValue())) {
+                    if (!(date == null ? "" : HttpHeader.DATE_FORMATER.format(date)).matches(entry.getValue())) {
                         return false;
                     }
                 case "Pragma":
@@ -289,7 +289,7 @@ public class HttpRequestHeader extends HttpHeader {
                         return false;
                     }
                 case "If-Modified-Since":
-                    if (!(ifModifiedSince == null ? "" : dateFormater.format(ifModifiedSince)).matches(entry.getValue())) {
+                    if (!(ifModifiedSince == null ? "" : HttpHeader.DATE_FORMATER.format(ifModifiedSince)).matches(entry.getValue())) {
                         return false;
                     }
                 case "If-None-Match":
@@ -360,11 +360,11 @@ public class HttpRequestHeader extends HttpHeader {
                         return false;
                     }
                 case "Expires":
-                    if (!(expires == null ? "" : dateFormater.format(expires)).matches(entry.getValue())) {
+                    if (!(expires == null ? "" : HttpHeader.DATE_FORMATER.format(expires)).matches(entry.getValue())) {
                         return false;
                     }
                 case "Last-Modified":
-                    if (!(lastModified == null ? "" : dateFormater.format(lastModified)).matches(entry.getValue())) {
+                    if (!(lastModified == null ? "" : HttpHeader.DATE_FORMATER.format(lastModified)).matches(entry.getValue())) {
                         return false;
                     }
                 default:
@@ -387,17 +387,17 @@ public class HttpRequestHeader extends HttpHeader {
     }
 
     @Override
-    public ContentTransferMethod contentTransferMethod() {
+    public ContentTransferMode contentTransferMode() {
         if (contentTransferMethod != null) {
             return contentTransferMethod;
         }
 
         if (contentLength != null) {
-            contentTransferMethod = ContentTransferMethod.CONTENT_LENGTH;
+            contentTransferMethod = ContentTransferMode.CONTENT_LENGTH;
         } else if (contentLength == null && transferEncoding != null && !transferEncoding.equals("identity")) {
-            contentTransferMethod = ContentTransferMethod.CHUNKED;
+            contentTransferMethod = ContentTransferMode.CHUNKED;
         } else {
-            contentTransferMethod = ContentTransferMethod.NO_CONTENT;
+            contentTransferMethod = ContentTransferMode.NO_CONTENT;
         }
 
         return contentTransferMethod;
@@ -485,5 +485,70 @@ public class HttpRequestHeader extends HttpHeader {
 
     public String getUserAgent() {
         return userAgent;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder header = new StringBuilder(method.name()).append(" ").append(uri).append(" ").append(version).append("\r\n");
+        header.append(toStringGeneralFields());
+        if (accept != null) {
+            header.append("Accept: ").append(accept).append("\r\n");
+        }
+        if (acceptCharset != null) {
+            header.append("Accept-Charset: ").append(acceptCharset).append("\r\n");
+        }
+        if (acceptEncoding != null) {
+            header.append("Accept-Encoding: ").append(acceptEncoding).append("\r\n");
+        }
+        if (acceptLanguage != null) {
+            header.append("Accept-Language: ").append(acceptLanguage).append("\r\n");
+        }
+        if (authorization != null) {
+            header.append("Authorization: ").append(authorization).append("\r\n");
+        }
+        if (expect != null) {
+            header.append("Expect: ").append(expect).append("\r\n");
+        }
+        if (from != null) {
+            header.append("From: ").append(from).append("\r\n");
+        }
+        if (host != null) {
+            header.append("Host: ").append(host).append("\r\n");
+        }
+        if (ifMatch != null) {
+            header.append("If-Match: ").append(ifMatch).append("\r\n");
+        }
+        if (ifModifiedSince != null) {
+            header.append("If-Modified-Since: ").append(DATE_FORMATER.format(ifModifiedSince)).append("\r\n");
+        }
+        if (ifNoneMatch != null) {
+            header.append("If-None-Match: ").append(ifNoneMatch).append("\r\n");
+        }
+        if (ifRange != null) {
+            header.append("If-Range: ").append(ifRange).append("\r\n");
+        }
+        if (ifUnmodifiedSince != null) {
+            header.append("If-Unmodified-Since: ").append(DATE_FORMATER.format(ifUnmodifiedSince)).append("\r\n");
+        }
+        if (maxForwards != null) {
+            header.append("Max-Forwards: ").append(maxForwards).append("\r\n");
+        }
+        if (proxyAuthorization != null) {
+            header.append("Proxy-Authorization: ").append(proxyAuthorization).append("\r\n");
+        }
+        if (range != null) {
+            header.append("Range: ").append(range).append("\r\n");
+        }
+        if (referer != null) {
+            header.append("Referer: ").append(referer).append("\r\n");
+        }
+        if (te != null) {
+            header.append("TE: ").append(te).append("\r\n");
+        }
+        if (userAgent != null) {
+            header.append("User-Agent: ").append(userAgent).append("\r\n");
+        }
+        header.append(toStringEntityFields());
+        return header.append("\r\n").toString();
     }
 }
