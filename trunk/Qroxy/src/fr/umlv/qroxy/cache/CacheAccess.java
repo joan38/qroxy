@@ -15,18 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package fr.umlv.qroxy.cache;
-import fr.umlv.qroxy.config.Config;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.util.HashMap;
-import java.util.Map;
 
-import java.net.URI;
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+
 /**
  *
  * @author Guillaume
@@ -41,7 +35,7 @@ public interface CacheAccess {
      * available in cache.
      * @throws CacheException If the HttpRequestHeader doesn't match preconditions.
      */
-    public FileInputStream getResource(HttpRequestHeader requestHeader) throws CacheException;
+    public CacheInputChannel getResource(HttpRequestHeader requestHeader) throws CacheException;
 
     /**
      * Cache resource
@@ -50,6 +44,13 @@ public interface CacheAccess {
      * @return The FileOutputStream were to cache the resource
      * @throws CacheException If the HttpRequestHeader doesn't match preconditions.
      */
-    public FileOutputStream cacheResource(HttpResponseHeader responseHeader) throws CacheException;
+    public CacheOutputChannel cacheResource(HttpResponseHeader responseHeader) throws CacheException;
+    
+    /**
+     * Advertise a corrupt resource.
+     * 
+     * @param resource The corrupt resource FileInputStream
+     * @return If the resource has been removed.
+     */
+    public boolean corruptCachedResource(CacheInputChannel resource);
 }
-
