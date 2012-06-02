@@ -33,6 +33,8 @@ import java.net.URI;
  */
 public class CacheProxy implements CacheAccess {
     private final CacheInputControler cacheInputControler = new CacheInputControler();
+    private final ExpirationModel expirationModel = new ExpirationModel();
+    private final ValidationModel validationModel = new ValidationModel();
     private final CacheInputChannelFactory inputChannelFactory = new CacheInputChannelFactory();
     private final CacheOutputChannelFactory outputChannelFactory = new CacheOutputChannelFactory();
     private final CacheEntryFactory cacheEntryFactory = new CacheEntryFactory();
@@ -44,7 +46,6 @@ public class CacheProxy implements CacheAccess {
 
     @Override
     public CacheInputChannel getResource(HttpRequestHeader requestHeader) throws CacheException {
-        throw new UnsupportedOperationException("Not supported yet.");
     }
 
     @Override
@@ -58,6 +59,8 @@ public class CacheProxy implements CacheAccess {
     }
 
     public boolean isValid(HttpResponseHeader responseHeader) {
-        return cacheInputControler.isCacheable(responseHeader);
+        boolean valid = cacheInputControler.isCacheable(responseHeader);
+        valid = expirationModel.isExpired();
+        return valid;
     }
 }
