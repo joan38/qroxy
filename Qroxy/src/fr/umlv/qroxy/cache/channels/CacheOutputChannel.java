@@ -34,9 +34,9 @@ import java.nio.file.StandardOpenOption;
  * @author Joan Goyeau <joan.goyeau@gmail.com>
  */
 public class CacheOutputChannel implements Closeable, AutoCloseable {
+
     private final CacheProxy proxy;
     private final Path path;
-    
     private FileChannel cacheFileChannel;
     private boolean cachable;
 
@@ -51,11 +51,11 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
             String data = HttpHeader.DECODER.decode(src).toString();
             try {
                 HttpResponseHeader responseHeader = HttpResponseHeader.parse(data);
-                if(!proxy.isValid(responseHeader)) {
+                if (!proxy.isValid(responseHeader)) {
                     throw new CacheException("Resource Not Cacheable");
                 }
                 cachable = true;
-                
+
             } catch (HttpMalformedHeaderException e) {
                 if (data.contains("\r\n\r\n")) {
                     throw new CacheException("No response header in this message");
@@ -72,22 +72,6 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        // Check if the resource writed successfully
-        try {
-            ByteBuffer buffer = ByteBuffer.allocate(Config.MAX_HEADER_LENGTH);
-            cacheFileChannel.read(buffer);
-            HttpResponseHeader responseHeader = HttpResponseHeader.parse(HttpHeader.DECODER.decode(buffer).toString());
-
-            // Preconditions
-            if (responseHeader.getHeaderLength() + responseHeader.getContentLength() != cacheFileChannel.size()) {
-                throw new CacheException("Writted resource length doesn't equals to the length of the HTTP header");
-            }
-            if (responseHeader.getLocation() == null) {
-                throw new CacheException("Location header field is required");
-            }
-        } catch (IOException e) {
-            cacheFileChannel.close();
-            throw new CacheException("Resource not cached because of a corrupt writing", e);
-        }
+        cacheFileChannel.close();
     }
 }
