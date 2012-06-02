@@ -24,8 +24,8 @@ import java.net.NetworkInterface;
 import java.net.StandardProtocolFamily;
 import java.net.StandardSocketOptions;
 import java.nio.channels.*;
-import java.util.Enumeration;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.DelayQueue;
 
 /**
  *
@@ -37,6 +37,7 @@ public class Proxy {
     private final CacheAccess cache;
     private Selector selector;
     private CacheExchangingHandler cacheExchangingHandler;
+    private DelayQueue<HttpConnectionHandler> delayedConnections = new DelayQueue();
 
     public Proxy(Config config, CacheAccess cache) {
         this.config = config;
@@ -78,25 +79,30 @@ public class Proxy {
         cacheExchanger.register(selector, SelectionKey.OP_READ, cacheExchangingHandler);
 
         while (selector.isOpen()) {
-            selector.select();
-
-            try {
-                for (SelectionKey key : selectedKeys) {
-                    if (key.isAcceptable()) {
-                        doAcceptNewClient(key);
-                    } else if (key.isConnectable()) {
-                        doConnectServer(key);
-                    } else if (!key.isValid()) {
-                        ((HttpConnectionHandler) key.attachment()).close();
-                    } else if (key.isReadable()) {
-                        ((LinkHandler) key.attachment()).read(key);
-                    } else if (key.isWritable()) {
-                        ((LinkHandler) key.attachment()).write(key);
-                    }
+            while (true) {
+                HttpConnectionHandler connection = delayedConnections.poll();
+                if (connection == null) {
+                    break;
                 }
-            } finally {
-                selectedKeys.clear();
+                connection.resumeConnection();
             }
+
+            for (SelectionKey key : selectedKeys) {
+                if (key.isAcceptable()) {
+                    doAcceptNewClient(key);
+                } else if (key.isConnectable()) {
+                    doConnectServer(key);
+                } else if (!key.isValid()) {
+                    ((HttpConnectionHandler) key.attachment()).close();
+                } else if (key.isReadable()) {
+                    ((LinkHandler) key.attachment()).read(key);
+                } else if (key.isWritable()) {
+                    ((LinkHandler) key.attachment()).write(key);
+                }
+            }
+            
+            selectedKeys.clear();
+            selector.select(1000);
         }
     }
 
@@ -105,7 +111,7 @@ public class Proxy {
         try {
             client.configureBlocking(false);
             SelectionKey clientKey = client.register(key.selector(), SelectionKey.OP_READ);
-            clientKey.attach(new HttpConnectionHandler(clientKey, cache, cacheExchangingHandler));
+            clientKey.attach(new HttpConnectionHandler(clientKey, cache, cacheExchangingHandler, config.getCategories(), this));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -128,5 +134,10 @@ public class Proxy {
      */
     public void stop() throws IOException {
         selector.close();
+    }
+
+    public boolean addDelayedConnection(HttpConnectionHandler connection) {
+        connection.pauseConnection();
+        return delayedConnections.add(connection);
     }
 }

@@ -33,6 +33,7 @@ import java.nio.channels.FileChannel;
 /**
  * Represents a connection to the cache in order to write a new resource in the
  * cache.
+ *
  * @author jgoyau
  */
 public class CacheOutputChannel implements Closeable, AutoCloseable {
@@ -49,11 +50,12 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
 
     /**
      * Write data contained in the ByteBuffer parsed in argument in the cache.
-     * To avoid the storage of the resource while test if it is cacheable, we check
-     * it directly in this method.
+     * To avoid the storage of the resource while test if it is cacheable, we
+     * check it directly in this method.
+     *
      * @param src
      * @return the number of written bytes
-     * @throws IOException 
+     * @throws IOException
      */
     public int write(ByteBuffer src) throws IOException {
         if (!cachable) {
@@ -75,6 +77,7 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
 
     /**
      * Test wether or not the channel is open.
+     *
      * @return true if it is open, else false
      */
     public boolean isOpen() {
@@ -83,6 +86,8 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        cacheFileChannel.close();
+        if (cacheFileChannel != null) {
+            cacheFileChannel.close();
+        }
     }
 }

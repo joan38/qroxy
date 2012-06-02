@@ -10,7 +10,7 @@
     </webUi>
     <cache>
         <path>~/Desktop/cache</path>
-        <maxDefaultSize>10000</maxDefaultSize>
+        <maxDefaultSize>10000</maxDefaultSize><!-- In bytes -->
         <exchangingMulticastAddress>239.252.0.0</exchangingMulticastAddress><!-- The port is the same as the proxy bindPort -->
     </cache>
     <categories>
@@ -18,15 +18,14 @@
         matches a header, first will be affected -->
         <category name="test">
             <regexs>
-                <regex applyOn="url">dfgf</regex>
-                <regex applyOn="Content-Length">0</regex>
+                <regex applyOn="url">.*ubuntu.*</regex>
             </regexs>
             <qosRule>
-                <maxSpeed>100</maxSpeed>
-                <priority>2</priority>
+                <maxSpeed>10000</maxSpeed><!-- In bytes per second -->
+                <priority>4</priority><!-- Start at 1 -->
             </qosRule>
             <cacheRule>
-                <maxSize>1000</maxSize>
+                <maxSize>1000</maxSize><!-- In bytes -->
             </cacheRule>
         </category>
     </categories>
