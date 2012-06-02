@@ -45,16 +45,6 @@ public class Cache {
         f = new File(path);
         cache.put(entry, f);
     }
-    
-    /*
-    public FileInputStream getFileStream(int hashedUri) {
-        File f = cache.get(hashedUri); 
-        try {
-            return new FileInputStream(f);
-        } finally {
-            return null;
-        }
-    }*/
 
     File getCacheEntry(CacheEntry entry) throws CacheException {
         File f = cache.get(entry);
