@@ -17,14 +17,14 @@
 package fr.umlv.qroxy.cache.channels;
 
 import java.io.IOException;
-import java.nio.file.Path;
+import java.nio.channels.FileChannel;
 
 /**
  *
  * @author Guillaume
  */
 public class CacheInputChannelFactory {
-    public CacheInputChannel createCacheInputeChannel(Path path) throws IOException {
-        return new CacheInputChannel(path);
+    public CacheInputChannel createCacheInputeChannel(FileChannel fileChannel) throws IOException {
+        return new CacheInputChannel(fileChannel);
     }
 }

@@ -18,7 +18,6 @@ package fr.umlv.qroxy.cache.channels;
 
 import fr.umlv.qroxy.cache.CacheException;
 import fr.umlv.qroxy.cache.CacheProxy;
-import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.http.HttpHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
 import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
@@ -26,9 +25,6 @@ import java.io.*;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 
 /**
  *

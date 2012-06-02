@@ -23,8 +23,10 @@ import fr.umlv.qroxy.cache.channels.CacheOutputChannelFactory;
 import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.channels.FileChannel;
+import java.util.Objects;
 
 /**
  *
@@ -33,7 +35,6 @@ import java.nio.channels.FileChannel;
 public class CacheProxy implements CacheAccess {
     private final CacheInputControler cacheInputControler = new CacheInputControler();
     private final ExpirationModel expirationModel = new ExpirationModel();
-    private final ValidationModel validationModel = new ValidationModel();
     private final CacheInputChannelFactory inputChannelFactory = new CacheInputChannelFactory();
     private final CacheOutputChannelFactory outputChannelFactory = new CacheOutputChannelFactory();
     private final CacheEntryFactory cacheEntryFactory = new CacheEntryFactory();
@@ -45,25 +46,43 @@ public class CacheProxy implements CacheAccess {
 
     @Override
     public CacheInputChannel getResource(HttpRequestHeader requestHeader) throws CacheException {
+        Objects.requireNonNull(requestHeader);
+        CacheEntry entry = cache.getCacheEntry(requestHeader.getUri());
+        if(!checkIfCacheResourceMatchRequest(requestHeader, entry.getHeader())) {
+            throw new CacheException("Cannot return cached resource for request: "+requestHeader);
+        }
+        return inputChannelFactory.createCacheInputeChannel(cache.getCacheFileChannel(entry));
     }
 
     @Override
     public CacheOutputChannel cacheResource(URI uri) throws CacheException {
+        Objects.requireNonNull(uri);
         return outputChannelFactory.createOutputChannel(this, uri);
     }
 
     @Override
     public boolean corruptCachedResource(CacheInputChannel resource) {
+        Objects.requireNonNull(resource);
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public boolean isValid(HttpResponseHeader responseHeader) {
+    private boolean isValid(HttpResponseHeader responseHeader) {
+        Objects.requireNonNull(responseHeader);
         boolean valid = cacheInputControler.isCacheable(responseHeader);
         valid = expirationModel.isExpired(responseHeader);
         return valid;
     }
 
     public FileChannel add(HttpResponseHeader responseHeader, URI uri) throws CacheException {
+        Objects.requireNonNull(responseHeader);
+        Objects.requireNonNull(uri);
+        if(!isValid(responseHeader)) {
+            throw new CacheException("Resource must not be cached");
+        }
         return cache.addCacheEntry(cacheEntryFactory.createCacheEntry(responseHeader, uri));
+    }
+
+    private boolean checkIfCacheResourceMatchRequest(HttpRequestHeader requestHeader, HttpResponseHeader cacheheader) {
+        
     }
 }
