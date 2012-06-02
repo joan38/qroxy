@@ -23,6 +23,7 @@ import fr.umlv.qroxy.http.HttpHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
 import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
 import java.io.*;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
@@ -36,12 +37,12 @@ import java.nio.file.StandardOpenOption;
 public class CacheOutputChannel implements Closeable, AutoCloseable {
 
     private final CacheProxy proxy;
-    private final Path path;
+    private final URI uri;
     private FileChannel cacheFileChannel;
     private boolean cachable;
 
-    CacheOutputChannel(CacheProxy proxy, Path path) {
-        this.path = path;
+    CacheOutputChannel(CacheProxy proxy, URI uri) {
+        this.uri = uri;
         this.proxy = proxy;
     }
 
@@ -55,7 +56,7 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
                     throw new CacheException("Resource Not Cacheable");
                 }
                 cachable = true;
-
+                cacheFileChannel = proxy.add(responseHeader, uri);
             } catch (HttpMalformedHeaderException e) {
                 if (data.contains("\r\n\r\n")) {
                     throw new CacheException("No response header in this message");

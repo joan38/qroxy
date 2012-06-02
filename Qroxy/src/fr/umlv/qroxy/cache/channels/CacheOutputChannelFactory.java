@@ -17,12 +17,13 @@
 package fr.umlv.qroxy.cache.channels;
 
 import fr.umlv.qroxy.cache.CacheProxy;
+import java.net.URI;
 /**
  *
  * @author Guillaume
  */
 public class CacheOutputChannelFactory {
-    public CacheOutputChannel createOutputChannel(CacheProxy proxy) {
-        return new CacheOutputChannel(proxy);
+    public CacheOutputChannel createOutputChannel(CacheProxy proxy, URI uri) {
+        return new CacheOutputChannel(proxy, uri);
     }
 }
