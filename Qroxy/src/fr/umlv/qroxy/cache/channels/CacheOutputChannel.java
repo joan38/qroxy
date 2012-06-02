@@ -17,6 +17,7 @@
 package fr.umlv.qroxy.cache.channels;
 
 import fr.umlv.qroxy.cache.CacheException;
+import fr.umlv.qroxy.cache.CacheProxy;
 import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.http.HttpHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
@@ -25,6 +26,7 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 /**
@@ -32,12 +34,15 @@ import java.nio.file.StandardOpenOption;
  * @author Joan Goyeau <joan.goyeau@gmail.com>
  */
 public class CacheOutputChannel implements Closeable, AutoCloseable {
-
-    private Path path;
+    private final CacheProxy proxy;
+    private final Path path;
+    
     private FileChannel cacheFileChannel;
     private boolean cachable;
 
-    CacheOutputChannel() {
+    CacheOutputChannel(CacheProxy proxy, Path path) {
+        this.path = path;
+        this.proxy = proxy;
     }
 
     public int write(ByteBuffer src) throws IOException {
@@ -46,16 +51,11 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
             String data = HttpHeader.DECODER.decode(src).toString();
             try {
                 HttpResponseHeader responseHeader = HttpResponseHeader.parse(data);
-                // Preconditions for caching
-
-                // Si c'est pas cachable
-                // throw new CacheException("C'est pas cachable !!!!! Pk ?");
-
-                // Ok it's cachable
+                if(!proxy.isValid(responseHeader)) {
+                    throw new CacheException("Resource Not Cacheable");
+                }
                 cachable = true;
-                // http://docs.oracle.com/javase/7/docs/api/java/nio/file/StandardOpenOption.html
-                // path = ?;
-                cacheFileChannel = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE, StandardOpenOption.READ);
+                
             } catch (HttpMalformedHeaderException e) {
                 if (data.contains("\r\n\r\n")) {
                     throw new CacheException("No response header in this message");
@@ -63,7 +63,6 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
                 return 0;
             }
         }
-
         return cacheFileChannel.write(src);
     }
 

@@ -20,6 +20,7 @@ import fr.umlv.qroxy.cache.channels.CacheInputChannel;
 import fr.umlv.qroxy.cache.channels.CacheOutputChannel;
 import fr.umlv.qroxy.cache.channels.CacheInputChannelFactory;
 import fr.umlv.qroxy.cache.channels.CacheOutputChannelFactory;
+import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
 import java.net.URI;
@@ -37,8 +38,8 @@ public class CacheProxy implements CacheAccess {
     private final CacheEntryFactory cacheEntryFactory = new CacheEntryFactory();
     private final Cache cache;
 
-    public CacheProxy(Cache cache) {
-        this.cache = cache;
+    public CacheProxy(Config config) {
+        cache = new Cache(config);
     }
 
     @Override
@@ -47,6 +48,7 @@ public class CacheProxy implements CacheAccess {
 
     @Override
     public CacheOutputChannel cacheResource(URI uri) throws CacheException {
+        CacheEntry entry = cacheEntryFactory.createCacheEntry(uri);
         return outputChannelFactory.createOutputChannel(this);
     }
 

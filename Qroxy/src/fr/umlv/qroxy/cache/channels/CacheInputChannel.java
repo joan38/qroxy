@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy.cache;
+package fr.umlv.qroxy.cache.channels;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -28,10 +28,8 @@ import java.nio.file.StandardOpenOption;
  */
 public class CacheInputChannel implements Closeable, AutoCloseable {
     private final FileChannel cacheFileChannel;
-    private final CacheProxy cacheProxy;
 
-    CacheInputChannel(Path cachePath, CacheProxy cacheProxy) throws IOException {
-        this.cacheProxy = cacheProxy;
+    CacheInputChannel(Path cachePath) throws IOException {
         this.cacheFileChannel = FileChannel.open(cachePath, StandardOpenOption.READ);
     }
 
