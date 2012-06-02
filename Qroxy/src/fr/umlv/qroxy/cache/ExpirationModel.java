@@ -26,18 +26,28 @@ import java.util.Date;
  */
 public class ExpirationModel {
     
-    private Date workOutAge(HttpResponseHeader cachedResponse) {
-        return new Date(System.currentTimeMillis());
+    private long workOutAge(HttpResponseHeader cachedResponse) {
+        return System.currentTimeMillis();
     }
 
-    boolean isExpired() {
+    boolean isExpired(HttpResponseHeader cachedResponse) {
         Date responseExpiration = cachedResponse.getExpires();
         String cacheControl = cachedResponse.getCacheControl();
-        Date freshnessTime;
-        Date currentAge, expiresValue, maxAgeValue, dateValue;
-        if(responseExpiration == null) {
-            reponseExpiration = workOutAge(cachedResponse);
+        Date freshnessTime, currentAge;
+        
+        long ageValue = System.currentTimeMillis() - cachedResponse.getDate().getTime();
+        currentAge = new Date(ageValue);
+        
+        String str = "max-age=";
+        if(cacheControl.contains(str)) {
+            freshnessTime = new Date(Long.valueOf(cacheControl.substring(str.length(), cacheControl.length())));
+            return freshnessTime.compareTo(currentAge) > 0;
         }
+        
+        if(responseExpiration == null) {
+            responseExpiration = new Date(workOutAge(cachedResponse));
+        }
+        freshnessTime = new Date(responseExpiration.getTime()-cachedResponse.getDate().getTime());
         return freshnessTime.compareTo(currentAge) > 0;
     }
 }
