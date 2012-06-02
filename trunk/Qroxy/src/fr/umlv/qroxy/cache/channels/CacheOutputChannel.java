@@ -14,8 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy.cache;
+package fr.umlv.qroxy.cache.channels;
 
+import fr.umlv.qroxy.cache.CacheException;
 import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.http.HttpHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
@@ -36,7 +37,7 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
     private FileChannel cacheFileChannel;
     private boolean cachable;
 
-    public CacheOutputChannel() {
+    CacheOutputChannel() {
     }
 
     public int write(ByteBuffer src) throws IOException {

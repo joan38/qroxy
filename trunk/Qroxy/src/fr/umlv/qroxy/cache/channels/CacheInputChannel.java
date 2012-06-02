@@ -30,7 +30,7 @@ public class CacheInputChannel implements Closeable, AutoCloseable {
     private final FileChannel cacheFileChannel;
     private final CacheProxy cacheProxy;
 
-    public CacheInputChannel(Path cachePath, CacheProxy cacheProxy) throws IOException {
+    CacheInputChannel(Path cachePath, CacheProxy cacheProxy) throws IOException {
         this.cacheProxy = cacheProxy;
         this.cacheFileChannel = FileChannel.open(cachePath, StandardOpenOption.READ);
     }
