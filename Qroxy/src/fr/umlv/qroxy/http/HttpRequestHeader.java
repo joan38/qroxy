@@ -384,6 +384,8 @@ public class HttpRequestHeader extends HttpHeader {
     }
     
     public static HttpRequestHeader getWhoHasRequest(URI resource) {
+        Objects.requireNonNull(resource);
+        
         HttpRequestHeader whohasRequest = new HttpRequestHeader();
         whohasRequest.method = HttpMethod.WHOHAS;
         whohasRequest.uri = resource;
@@ -391,8 +393,15 @@ public class HttpRequestHeader extends HttpHeader {
         
         return whohasRequest;
     }
+    
+    public void setIfModifiedCheckFields(Date ifModifiedSince, String ifNoneMatch) {
+        this.ifModifiedSince = ifModifiedSince;
+        this.ifNoneMatch = ifNoneMatch;
+    }
 
     public Category matchesCatagories(ArrayList<Category> categories) {
+        Objects.requireNonNull(categories);
+        
         for (Category category : categories) {
             if (matchesCatagory(category)) {
                 return category;
