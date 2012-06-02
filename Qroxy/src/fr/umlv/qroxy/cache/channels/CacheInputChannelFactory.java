@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy.cache;
+package fr.umlv.qroxy.cache.channels;
 
 import java.io.IOException;
 import java.nio.file.Path;
