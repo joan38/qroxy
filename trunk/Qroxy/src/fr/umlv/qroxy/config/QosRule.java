@@ -24,11 +24,17 @@ public class QosRule {
     
     private final Integer minSpeed;
     private final Integer maxSpeed;
-    private final Integer priority;
+    private final int priority;
 
-    public QosRule(Integer minSpeed, Integer maxSpeed, Integer priority) {
-        if (minSpeed == null && maxSpeed == null && priority == null) {
-            throw new NullPointerException("At least one rule of minSpeed, maxSpeed and priority is required");
+    public QosRule(Integer minSpeed, Integer maxSpeed, int priority) {
+        if (minSpeed != null && minSpeed < 0) {
+            throw new IllegalArgumentException("The minSpeed has to be positive");
+        }
+        if (minSpeed != null && maxSpeed < 0) {
+            throw new IllegalArgumentException("The minSpeed has to be positive");
+        }
+        if (priority <= 0) {
+            throw new IllegalArgumentException("The priority has to be higher than 0");
         }
         
         this.minSpeed = minSpeed;
@@ -44,7 +50,7 @@ public class QosRule {
         return minSpeed;
     }
 
-    public Integer getPriority() {
+    public int getPriority() {
         return priority;
     }
 }

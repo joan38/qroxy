@@ -20,12 +20,15 @@ import fr.umlv.qroxy.cache.CacheAccess;
 import fr.umlv.qroxy.cache.CacheException;
 import fr.umlv.qroxy.cache.channels.CacheInputChannel;
 import fr.umlv.qroxy.cache.channels.CacheOutputChannel;
+import fr.umlv.qroxy.config.Category;
 import fr.umlv.qroxy.config.Config;
+import fr.umlv.qroxy.config.QosRule;
 import fr.umlv.qroxy.http.HttpHeader;
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
 import fr.umlv.qroxy.http.HttpStatusCode;
 import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
+import fr.umlv.qroxy.http.exceptions.HttpSendingErrorCodeException;
 import fr.umlv.qroxy.http.exceptions.HttpUnsupportedMethodException;
 import fr.umlv.qroxy.http.exceptions.HttpUnsupportedVersionException;
 import java.io.IOException;
@@ -34,23 +37,24 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
-import java.util.Date;
-import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.nio.channels.UnresolvedAddressException;
+import java.util.*;
+import java.util.concurrent.Delayed;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
  * @author joan
  */
-public class HttpConnectionHandler implements LinkHandler {
+public class HttpConnectionHandler implements LinkHandler, Delayed {
 
-    private static final int WHOHAS_CANCEL_TIME_OUT = 100;
-    private final ByteBuffer buffer;
     private final CacheAccess cache;
     private final SelectionKey clientKey;
     private final CacheExchangingHandler cacheExchangingHandler;
-    private final Timer whohasCancelTimer = new Timer();
+    private Timer whohasCancelTimer;
+    private final Collection<Category> categories;
+    private final Proxy proxy;
+    private ByteBuffer buffer;
     private SelectionKey serverKey;
     private HttpRequestHeader requestedHeader;
     private HttpResponseHeader respondedHeader;
@@ -61,28 +65,42 @@ public class HttpConnectionHandler implements LinkHandler {
     private InetSocketAddress currentServerAddress;
     private long nbReadedByte;
     private int currentHeaderLength;
+    private Integer bytesLeftInSecond;
+    private int clientPausedInterestOps;
+    private int serverPausedInterestOps;
+    private long minDate;
 
-    public HttpConnectionHandler(SelectionKey client, CacheAccess cache, CacheExchangingHandler cacheExchangingHandler) {
+    public HttpConnectionHandler(SelectionKey client,
+            CacheAccess cache,
+            CacheExchangingHandler cacheExchangingHandler,
+            Collection<Category> categories,
+            Proxy proxy) {
         this.buffer = ByteBuffer.allocate(Config.MAX_HEADER_LENGTH);
         this.buffer.flip();
         this.cache = cache;
         this.clientKey = client;
         this.cacheExchangingHandler = cacheExchangingHandler;
+        this.categories = categories;
+        this.proxy = proxy;
     }
 
     @Override
     public void read(SelectionKey key) throws IOException {
-        if (key == clientKey) {
-            readFromClient();
-        } else if (key == serverKey) {
-            if (cachedResponse == null) {
-                readFromServer();
+        try {
+            if (key == clientKey) {
+                readFromClient();
+            } else if (key == serverKey) {
+                if (cachedResponse == null) {
+                    readFromServer();
+                } else {
+                    // If modified sent
+                    readIfModifiedResponseFromServer();
+                }
             } else {
-                // If modified sent
-                readIfModifiedResponseFromServer();
+                throw new IOException("SelectionKey is neither a client or a server !");
             }
-        } else {
-            throw new IOException("SelectionKey is neither a client or a server !");
+        } catch (HttpSendingErrorCodeException e) {
+            // Do nothing
         }
     }
 
@@ -101,7 +119,7 @@ public class HttpConnectionHandler implements LinkHandler {
         }
     }
 
-    private void readIfModifiedResponseFromServer() {
+    private void readIfModifiedResponseFromServer() throws HttpSendingErrorCodeException {
         if (cachedResponse != null) {
             // If modified response is expected
             if (respondedHeader.getStatusCode() == HttpStatusCode.NOT_MODIFIED) {
@@ -122,13 +140,27 @@ public class HttpConnectionHandler implements LinkHandler {
             buffer.compact();
             int nbReaded = channel.read(buffer);
             buffer.flip();
-
+            
             if (nbReaded == -1) {
                 channel.shutdownInput();
                 serverKey.interestOps(0);
                 closed = true;
                 return;
             }
+            
+            //Qos
+            if (bytesLeftInSecond != null) {
+                bytesLeftInSecond -= nbReaded;
+                if (bytesLeftInSecond <= 0) {
+                    if (System.nanoTime() < minDate) {
+                        proxy.addDelayedConnection(this);
+                        return;
+                    }
+                    bytesLeftInSecond += requestedHeader.getCategory().getQosRule().getMaxSpeed();
+                    minDate = System.nanoTime() + 1000000000;
+                }
+            }
+
             nbReadedByte += nbReaded;
 
             if (respondedHeader == null) {
@@ -180,13 +212,14 @@ public class HttpConnectionHandler implements LinkHandler {
                 break;
             case CHUNKED:
                 // TODO
+                System.out.println("Chunked");
                 break;
             case NO_CONTENT:
                 serverKey.interestOps(0);
         }
     }
 
-    private void readFromClient() {
+    private void readFromClient() throws HttpSendingErrorCodeException {
         try {
             SocketChannel channel = (SocketChannel) clientKey.channel();
             buffer.compact();
@@ -203,7 +236,7 @@ public class HttpConnectionHandler implements LinkHandler {
                 if (!readRequestHeader()) {
                     return;
                 }
-                
+
                 // Connection
                 try {
                     cachedResponse = cache.getResource(requestedHeader);
@@ -225,12 +258,26 @@ public class HttpConnectionHandler implements LinkHandler {
         }
     }
 
-    private boolean readRequestHeader() throws IOException {
+    private boolean readRequestHeader() throws IOException, HttpSendingErrorCodeException {
+        resetAllForNewRequest();
         String data = HttpHeader.DECODER.decode(buffer).toString();
         buffer.rewind();
         try {
             requestedHeader = HttpRequestHeader.parse(data);
             currentHeaderLength = data.indexOf("\r\n\r\n") + 4;
+
+            // Qos
+            try {
+                requestedHeader.matchesCatagories(categories);
+                if (requestedHeader.getCategory().getQosRule().getMaxSpeed() == 0) {
+                    sendErrorCode(HttpStatusCode.NOT_ACCEPTABLE);
+                }
+                // Activate speed limit juste by puting something not null
+                bytesLeftInSecond = 0;
+            } catch (NullPointerException e) {
+                // No QosRule
+            }
+
             return true;
         } catch (HttpUnsupportedVersionException e) {
             sendErrorCode(HttpStatusCode.HTTP_VERSION_NOT_SUPPORTED);
@@ -244,6 +291,7 @@ public class HttpConnectionHandler implements LinkHandler {
                 sendErrorCode(HttpStatusCode.BAD_REQUEST);
             }
         }
+
         return false;
     }
 
@@ -256,13 +304,14 @@ public class HttpConnectionHandler implements LinkHandler {
                 break;
             case CHUNKED:
                 // TODO
+                System.out.println("Chunked");
                 break;
             case NO_CONTENT:
-                // Do not set clientKey.interestOps(0); because it depends on cache connection in local
+            // Do not set clientKey.interestOps(0); because it depends on cache connection in local
         }
     }
 
-    private void inCache() {
+    private void inCache() throws HttpSendingErrorCodeException {
         // Is in local cache
         ByteBuffer cachedData = ByteBuffer.allocate(Config.MAX_HEADER_LENGTH);
         HttpResponseHeader cachedResponseHeader;
@@ -287,7 +336,7 @@ public class HttpConnectionHandler implements LinkHandler {
         }
     }
 
-    private void doNotUseCacheForRequest() {
+    private void doNotUseCacheForRequest() throws HttpSendingErrorCodeException {
         try {
             connectToServer(requestedHeader.getUri());
             clientKey.interestOps(0);
@@ -297,19 +346,27 @@ public class HttpConnectionHandler implements LinkHandler {
         }
     }
 
-    private void notInCache() {
+    private void notInCache() throws HttpSendingErrorCodeException {
         try {
             // Ask on multicast
             cacheExchangingHandler.sendWhoHas(requestedHeader.getUri(), this);
             clientKey.interestOps(0);
 
+            whohasCancelTimer = new Timer();
             whohasCancelTimer.schedule(new TimerTask() {
 
                 @Override
                 public void run() {
-                    cacheExchangingHandler.cancelWhoHas(requestedHeader.getUri());
+                    try {
+                        cacheExchangingHandler.cancelWhoHas(requestedHeader.getUri());
+                        connectToServer(requestedHeader.getUri());
+                    } catch (IOException e) {
+                        close();
+                    } catch (HttpSendingErrorCodeException e) {
+                        // Do nothing
+                    }
                 }
-            }, WHOHAS_CANCEL_TIME_OUT);
+            }, Config.WHOHAS_CANCEL_TIME_OUT);
         } catch (IOException e) {
             try {
                 connectToServer(requestedHeader.getUri());
@@ -322,29 +379,32 @@ public class HttpConnectionHandler implements LinkHandler {
     }
 
     public void ownResponse(InetSocketAddress source, HttpResponseHeader ownResponse) {
-        whohasCancelTimer.cancel();
-        if (ownResponse.getExpires().before(new Date())) {
-            // Expired
-            cachedResourceExpired(ownResponse);
-        } else {
-            // Not expired  
-            try {
-                respondedHeader = null;
-                connectToServer(source);
-                clientKey.interestOps(SelectionKey.OP_WRITE);
-            } catch (IOException e) {
+        try {
+            whohasCancelTimer.cancel();
+            if (ownResponse.getExpires().before(new Date())) {
+                // Expired
+                cachedResourceExpired(ownResponse);
+            } else {
+                // Not expired  
                 try {
-                    connectToServer(requestedHeader.getUri());
-                    clientKey.interestOps(0);
-                } catch (IOException ex) {
-                    e.printStackTrace();
-                    close();
+                    respondedHeader = null;
+                    connectToServer(source);
+                    clientKey.interestOps(SelectionKey.OP_WRITE);
+                } catch (IOException e) {
+                    try {
+                        connectToServer(requestedHeader.getUri());
+                        clientKey.interestOps(0);
+                    } catch (IOException ex) {
+                        e.printStackTrace();
+                        close();
+                    }
                 }
             }
+        } catch (HttpSendingErrorCodeException e) {
         }
     }
 
-    private void cachedResourceExpired(HttpResponseHeader cachedResponseHeader) {
+    private void cachedResourceExpired(HttpResponseHeader cachedResponseHeader) throws HttpSendingErrorCodeException {
         try {
             // Modify the header with If-Modified-Since, If-None-Match and Connection: close;
             requestedHeader.setIfModifiedCheckFields(cachedResponseHeader.getDate(), cachedResponseHeader.getETag());
@@ -356,18 +416,22 @@ public class HttpConnectionHandler implements LinkHandler {
         }
     }
 
-    private void connectToServer(InetSocketAddress address) throws IOException {
+    private void connectToServer(InetSocketAddress address) throws IOException, HttpSendingErrorCodeException {
         if (address.equals(currentServerAddress)) {
             return;
         }
-        SocketChannel serverChannel = SocketChannel.open();
-        serverChannel.configureBlocking(false);
-        serverKey = serverChannel.register(clientKey.selector(), SelectionKey.OP_CONNECT, this);
-        serverChannel.connect(address);
-        currentServerAddress = address;
+        try {
+            SocketChannel serverChannel = SocketChannel.open();
+            serverChannel.configureBlocking(false);
+            serverKey = serverChannel.register(clientKey.selector(), SelectionKey.OP_CONNECT, this);
+            serverChannel.connect(address);
+            currentServerAddress = address;
+        } catch (UnresolvedAddressException e) {
+            sendErrorCode(HttpStatusCode.NOT_FOUND);
+        }
     }
 
-    private void connectToServer(URI uri) throws IOException {
+    private void connectToServer(URI uri) throws IOException, HttpSendingErrorCodeException {
         connectToServer(new InetSocketAddress(uri.getHost(), uri.getPort()));
     }
 
@@ -381,9 +445,7 @@ public class HttpConnectionHandler implements LinkHandler {
             channel.write(buffer);
 
             if (!buffer.hasRemaining() && nbReaded == -1) {
-                if (keepAlive) {
-                    resetAllForNewRequest();
-                } else {
+                if (!keepAlive) {
                     close();
                 }
             }
@@ -458,19 +520,23 @@ public class HttpConnectionHandler implements LinkHandler {
         currentServerAddress = null;
         nbReadedByte = 0;
         currentHeaderLength = 0;
+        bytesLeftInSecond = null;
+        minDate = 0;
         clientKey.interestOps(SelectionKey.OP_READ);
         if (serverKey != null) {
             serverKey.interestOps(0);
         }
     }
 
-    private void sendErrorCode(HttpStatusCode statusCode) {
-        buffer.clear();
-        buffer.put(statusCode.getHttpResponse().getBytes(HttpHeader.CHARSET));
-        buffer.flip();
+    private void sendErrorCode(HttpStatusCode statusCode) throws HttpSendingErrorCodeException {
+        buffer = ByteBuffer.wrap(statusCode.getHttpResponse().getBytes(HttpHeader.CHARSET));
         closed = true;
         cachedResponse = null;
         clientKey.interestOps(SelectionKey.OP_WRITE);
+        if (serverKey != null) {
+            serverKey.interestOps(0);
+        }
+        throw new HttpSendingErrorCodeException();
     }
 
     public void close() {
@@ -485,5 +551,44 @@ public class HttpConnectionHandler implements LinkHandler {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public void pauseConnection() {
+        clientPausedInterestOps = clientKey.interestOps();
+        serverPausedInterestOps = serverKey.interestOps();
+        clientKey.interestOps(0);
+        serverKey.interestOps(0);
+    }
+
+    public void resumeConnection() {
+        clientKey.interestOps(clientPausedInterestOps);
+        serverKey.interestOps(serverPausedInterestOps);
+    }
+
+    @Override
+    public long getDelay(TimeUnit unit) {
+        switch (unit) {
+            case DAYS:
+                return (minDate - System.nanoTime()) / 1000000000000000000l;
+            case HOURS:
+                return (minDate - System.nanoTime()) / 1000000000000000l;
+            case MINUTES:
+                return (minDate - System.nanoTime()) / 1000000000000l;
+            case SECONDS:
+                return (minDate - System.nanoTime()) / 1000000000l;
+            case MILLISECONDS:
+                return (minDate - System.nanoTime()) / 1000000l;
+            case MICROSECONDS:
+                return (minDate - System.nanoTime()) / 1000l;
+            case NANOSECONDS:
+                return minDate - System.nanoTime();
+            default:
+                return 0;
+        }
+    }
+
+    @Override
+    public int compareTo(Delayed o) {
+        return (getDelay(TimeUnit.NANOSECONDS) < o.getDelay(TimeUnit.NANOSECONDS) ? -1 : 1);
     }
 }

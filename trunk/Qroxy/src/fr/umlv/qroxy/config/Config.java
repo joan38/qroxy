@@ -40,7 +40,8 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class Config extends DefaultHandler {
 
-    public static final int MAX_HEADER_LENGTH = 8192;
+    public static final int WHOHAS_CANCEL_TIME_OUT = 100;
+    public static final int MAX_HEADER_LENGTH = 4096;
     private static final Double XML_CONFIG_VERSION = 1.0;
     private static final int DEFAULT_WEBUI_BIND_PORT = 7777;
     private static final int DEFAULT_PROXY_BIND_PORT = 8080;
@@ -109,7 +110,7 @@ public class Config extends DefaultHandler {
     QosRule currentQosRule;
     Integer currentMinSpeed;
     Integer currentMaxSpeed;
-    Integer currentPriority;
+    int currentPriority;
     CacheRule currentCacheRule;
     int currentMaxSize;
 

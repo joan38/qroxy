@@ -24,6 +24,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.*;
+import java.util.Map.Entry;
 
 /**
  * ava.net.URI; import java.net.URISyntaxException; import java.net.URL; import
@@ -34,6 +35,8 @@ import java.util.*;
  */
 public class HttpRequestHeader extends HttpHeader {
 
+    private Category category;
+    
     /**
      * <b>Request method (see section 5.1.1 in RFC 2616)</b><p>
      */
@@ -205,9 +208,9 @@ public class HttpRequestHeader extends HttpHeader {
 
     public boolean matchesCatagory(Category category) {
         Map<String, String> regexs = category.getRegexs();
-        Set<Map.Entry<String, String>> entrySet = regexs.entrySet();
+        Set<Entry<String, String>> entrySet = regexs.entrySet();
 
-        for (Map.Entry<String, String> entry : entrySet) {
+        for (Entry<String, String> entry : entrySet) {
             switch (entry.getKey()) {
                 /**
                  * Requested URL
@@ -216,6 +219,7 @@ public class HttpRequestHeader extends HttpHeader {
                     if (!uri.toString().matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 /**
                  * General Header Fields
                  */
@@ -223,38 +227,47 @@ public class HttpRequestHeader extends HttpHeader {
                     if (!(cacheControl == null ? "" : cacheControl).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Connection":
                     if (!(connection == null ? "" : connection).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Date":
                     if (!(date == null ? "" : HttpHeader.DATE_FORMATER.format(date)).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Pragma":
                     if (!(pragma == null ? "" : pragma).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Trailer":
                     if (!(trailer == null ? "" : trailer).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Transfer-Encoding":
                     if (!(transferEncoding == null ? "" : transferEncoding).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Upgrade":
                     if (!(upgrade == null ? "" : upgrade).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Via":
                     if (!(via == null ? "" : via).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Warning":
                     if (!(warning == null ? "" : warning).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 /**
                  * Request Header Fields
                  */
@@ -262,74 +275,92 @@ public class HttpRequestHeader extends HttpHeader {
                     if (!(accept == null ? "" : accept).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Accept-Charset":
                     if (!(acceptCharset == null ? "" : acceptCharset).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Accept-Encoding":
                     if (!(acceptEncoding == null ? "" : acceptEncoding).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Accept-Language":
                     if (!(acceptLanguage == null ? "" : acceptLanguage).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Authorization":
                     if (!(authorization == null ? "" : authorization).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Expect":
                     if (!(expect == null ? "" : expect).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "From":
                     if (!(from == null ? "" : from).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Host":
                     if (!(host == null ? "" : host).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "If-Match":
                     if (!(ifMatch == null ? "" : ifMatch).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "If-Modified-Since":
                     if (!(ifModifiedSince == null ? "" : HttpHeader.DATE_FORMATER.format(ifModifiedSince)).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "If-None-Match":
                     if (!(ifNoneMatch == null ? "" : ifNoneMatch).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "If-Range":
                     if (!(ifRange == null ? "" : ifRange).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Max-Forwards":
                     if (!(maxForwards == null ? "" : maxForwards).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Proxy-Authorization":
                     if (!(proxyAuthorization == null ? "" : proxyAuthorization).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Range":
                     if (!(range == null ? "" : range).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Referer":
                     if (!(referer == null ? "" : referer).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "TE":
                     if (!(te == null ? "" : te).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "User-Agent":
                     if (!(userAgent == null ? "" : userAgent).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 /**
                  * Entity Header Fields
                  */
@@ -337,42 +368,52 @@ public class HttpRequestHeader extends HttpHeader {
                     if (!(allow == null ? "" : allow).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Content-Encoding":
                     if (!(contentEncoding == null ? "" : contentEncoding).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Content-Language":
                     if (!(contentLanguage == null ? "" : contentLanguage).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Content-Length":
-                    if (!new Integer(contentLength).toString().matches(entry.getValue())) {
+                    if (!(contentLength == null ? "" : contentLength.toString()).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Content-Location":
                     if (!(contentLocation == null ? "" : contentLocation).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Content-MD5":
                     if (!(contentMD5 == null ? "" : contentMD5).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Content-Range":
                     if (!(contentRange == null ? "" : contentRange).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Content-Type":
                     if (!(contentType == null ? "" : contentType).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Expires":
                     if (!(expires == null ? "" : HttpHeader.DATE_FORMATER.format(expires)).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 case "Last-Modified":
                     if (!(lastModified == null ? "" : HttpHeader.DATE_FORMATER.format(lastModified)).matches(entry.getValue())) {
                         return false;
                     }
+                    break;
                 default:
                     String extensionValue = extensionHeader.get(entry.getKey());
                     if (!(extensionValue == null ? "" : extensionValue).matches(entry.getValue())) {
@@ -399,12 +440,13 @@ public class HttpRequestHeader extends HttpHeader {
         this.ifNoneMatch = ifNoneMatch;
     }
 
-    public Category matchesCatagories(ArrayList<Category> categories) {
+    public Category matchesCatagories(Collection<Category> categories) {
         Objects.requireNonNull(categories);
         
-        for (Category category : categories) {
-            if (matchesCatagory(category)) {
-                return category;
+        for (Category c : categories) {
+            if (matchesCatagory(c)) {
+                category = c;
+                return c;
             }
         }
         return null;
@@ -497,6 +539,10 @@ public class HttpRequestHeader extends HttpHeader {
 
     public String getReferer() {
         return referer;
+    }
+
+    public Category getCategory() {
+        return category;
     }
 
     public String getTe() {

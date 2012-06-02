@@ -16,6 +16,7 @@
  */
 package fr.umlv.qroxy;
 
+import fr.umlv.qroxy.cache.CacheProxy;
 import fr.umlv.qroxy.cache.CacheTmpImpl;
 import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.config.XMLQroxyConfigException;
@@ -25,7 +26,6 @@ import gnu.getopt.LongOpt;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 
 /**
  *
@@ -85,7 +85,7 @@ public class Main {
         }
 
         try {
-            new Proxy(config, new CacheTmpImpl()).launch();
+            new Proxy(config, new CacheTmpImpl()).launch(); // CacheProxy
         } catch (IOException e) {
             System.err.println("Proxy stopped due to a network error: " + e.getMessage());
         }
