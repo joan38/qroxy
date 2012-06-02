@@ -17,17 +17,16 @@
 package fr.umlv.qroxy.cache;
 
 import fr.umlv.qroxy.config.Config;
-import fr.umlv.qroxy.http.HttpRequestHeader;
-import fr.umlv.qroxy.http.HttpResponseHeader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+
 import java.io.IOException;
+
 import java.net.URI;
+
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
