@@ -21,8 +21,12 @@ import fr.umlv.qroxy.cache.CacheProxy;
 import fr.umlv.qroxy.http.HttpHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
 import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;
-import java.io.*;
+
+import java.io.Closeable;
+import java.io.IOException;
+
 import java.net.URI;
+
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
@@ -48,9 +52,6 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
             String data = HttpHeader.DECODER.decode(src).toString();
             try {
                 HttpResponseHeader responseHeader = HttpResponseHeader.parse(data);
-                if (!proxy.isValid(responseHeader)) {
-                    throw new CacheException("Resource Not Cacheable");
-                }
                 cachable = true;
                 cacheFileChannel = proxy.add(responseHeader, uri);
             } catch (HttpMalformedHeaderException e) {

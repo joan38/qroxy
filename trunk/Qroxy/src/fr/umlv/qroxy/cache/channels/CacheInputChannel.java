@@ -16,11 +16,11 @@
  */
 package fr.umlv.qroxy.cache.channels;
 
-import java.io.*;
+import java.io.Closeable;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+
 
 /**
  *
@@ -29,7 +29,7 @@ import java.nio.file.StandardOpenOption;
 public class CacheInputChannel implements Closeable, AutoCloseable {
     private final FileChannel cacheFileChannel;
 
-    CacheInputChannel(FileChannel cacheFileChannel) throws IOException {
+    CacheInputChannel(FileChannel cacheFileChannel) {
         this.cacheFileChannel = cacheFileChannel;
     }
 
