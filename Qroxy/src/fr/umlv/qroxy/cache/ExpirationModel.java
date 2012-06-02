@@ -16,7 +16,6 @@
  */
 package fr.umlv.qroxy.cache;
 
-import fr.umlv.qroxy.http.HttpHeader;
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
 import java.util.Date;
@@ -27,7 +26,11 @@ import java.util.Date;
  */
 public class ExpirationModel {
     
-    public static boolean isExpired(HttpRequestHeader request, HttpResponseHeader cachedResponse) {
+    private Date workOutAge(HttpResponseHeader cachedResponse) {
+        return new Date(System.currentTimeMillis());
+    }
+
+    boolean isExpired() {
         Date responseExpiration = cachedResponse.getExpires();
         String cacheControl = cachedResponse.getCacheControl();
         Date freshnessTime;
@@ -36,9 +39,5 @@ public class ExpirationModel {
             reponseExpiration = workOutAge(cachedResponse);
         }
         return freshnessTime.compareTo(currentAge) > 0;
-    }
-    
-    private static Date workOutAge(HttpResponseHeader cachedResponse) {
-        return new Date(System.currentTimeMillis());
     }
 }
