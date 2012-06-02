@@ -29,8 +29,13 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- *
- * @author Guillaume
+ * Represents a cache. It supports the following operations:
+ * - add an entry to the cache 
+ * - get an entry given an URI
+ * - get a FileChannel to read data from the cache
+ * Note: No algorithm of size management has been implemented due to a lack of 
+ * time
+ * @author gdemurge
  */
 public class Cache {
 
@@ -41,6 +46,13 @@ public class Cache {
         this.config = config;
     }
 
+    /**
+     * Add an entry to the cache. It returns a FileChannel in order to 
+     * write data in the cache after the given entry has been added.
+     * @param entry
+     * @return the channel to write the new resource in the cache
+     * @throws CacheException 
+     */
     FileChannel addCacheEntry(CacheEntry entry) throws CacheException {
         Objects.requireNonNull(entry);
         Path path = cache.remove(entry);
@@ -52,6 +64,13 @@ public class Cache {
         }
     }
 
+    /**
+     * Returns a channel to read cached data related to the given entry 
+     * from the cache.
+     * @param entry
+     * @return the channel to read a cached ressource
+     * @throws CacheException 
+     */
     FileChannel getCacheFileChannel(CacheEntry entry) throws CacheException {
         Objects.requireNonNull(entry);
         Path path = cache.get(entry);        
@@ -65,6 +84,15 @@ public class Cache {
         }
     }
     
+    /**
+     * Return the entry containing the given URI.
+     * Note: For the moment the implementation of the class Cache implies that
+     * this method work in linear complexity. It has to be improve in a future
+     * version.
+     * @param uri
+     * @return the CacheEntry containing the given uri if it exists
+     * @throws CacheException 
+     */
     CacheEntry getCacheEntry(URI uri) throws CacheException {
         Set<CacheEntry> entries = cache.keySet();
         for(CacheEntry e: entries) {

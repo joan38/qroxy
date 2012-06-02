@@ -22,8 +22,9 @@ import fr.umlv.qroxy.http.HttpRequestHeader;
 import java.net.URI;
 
 /**
- *
- * @author Guillaume
+ * Interface describing methods for submit to and retrieving resources from
+ * the cache
+ * @author gdemurge & jgoyau
  */
 public interface CacheAccess {
 

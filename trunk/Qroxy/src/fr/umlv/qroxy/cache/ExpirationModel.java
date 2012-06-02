@@ -16,20 +16,30 @@
  */
 package fr.umlv.qroxy.cache;
 
-import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
 import java.util.Date;
 
 /**
- *
- * @author Guillaume
+ * Objects containing the algorithm(s) to decide if a cached ressource is
+ * fresh or not.
+ * @author gdemurge
  */
 public class ExpirationModel {
     
-    private long workOutAge(HttpResponseHeader cachedResponse) {
+    /**
+     * Return the current system time.
+     * @return time in milliseconds
+     */
+    private long currentTime() {
         return System.currentTimeMillis();
     }
 
+    /**
+     * Test whether or not a resource is expired. The resource is indentified 
+     * by the given HTTP response header.
+     * @param cachedResponse
+     * @return if the cachedResponse is expired or not
+     */
     boolean isExpired(HttpResponseHeader cachedResponse) {
         Date responseExpiration = cachedResponse.getExpires();
         String cacheControl = cachedResponse.getCacheControl();
@@ -45,7 +55,7 @@ public class ExpirationModel {
         }
         
         if(responseExpiration == null) {
-            responseExpiration = new Date(workOutAge(cachedResponse));
+            responseExpiration = new Date(currentTime());
         }
         freshnessTime = new Date(responseExpiration.getTime()-cachedResponse.getDate().getTime());
         return freshnessTime.compareTo(currentAge) > 0;

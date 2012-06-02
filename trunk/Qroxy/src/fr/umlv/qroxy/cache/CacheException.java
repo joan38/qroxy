@@ -19,7 +19,7 @@ package fr.umlv.qroxy.cache;
 import java.io.IOException;
 
 /**
- *
+ * Global Exception to report any problem in the caching processes.
  * @author joan
  */
 public class CacheException extends IOException {

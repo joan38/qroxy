@@ -20,10 +20,17 @@ import fr.umlv.qroxy.http.HttpResponseHeader;
 import java.net.URI;
 
 /**
- *
- * @author Guillaume
+ * Factory to create cache entry objects.
+ * @author gdemurge
  */
 class CacheEntryFactory {
+    /**
+     * Create the cache entry given the HTTP header and the URi parsed in 
+     * argument.
+     * @param header
+     * @param uri
+     * @return the created CacheEntry
+     */
     public CacheEntry createCacheEntry(HttpResponseHeader header, URI uri) {
         return new CacheEntry(header, uri);
     }
