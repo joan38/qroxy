@@ -22,9 +22,6 @@ import fr.umlv.qroxy.cache.channels.CacheInputChannelFactory;
 import fr.umlv.qroxy.cache.channels.CacheOutputChannelFactory;
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.URI;
 
 /**
@@ -60,7 +57,7 @@ public class CacheProxy implements CacheAccess {
 
     public boolean isValid(HttpResponseHeader responseHeader) {
         boolean valid = cacheInputControler.isCacheable(responseHeader);
-        valid = expirationModel.isExpired();
+        valid = expirationModel.isExpired(responseHeader);
         return valid;
     }
 }
