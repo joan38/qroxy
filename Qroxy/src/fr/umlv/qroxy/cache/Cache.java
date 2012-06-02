@@ -30,6 +30,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  *
@@ -39,23 +41,24 @@ public class Cache {
     private final Config config;
     private final Map<CacheEntry, Path> cache = new HashMap<>();
     
-    public Cache(Config config) {
+    Cache(Config config) {
         this.config = config;
     }
     
-    public FileChannel addCacheEntry(CacheEntry entry) throws CacheException {
+    FileChannel addCacheEntry(CacheEntry entry) throws CacheException {
+        Objects.requireNonNull(entry);
         Path path = cache.remove(entry);
-        
         cache.put(entry, Paths.get(entry.getUri()));
         try {
-            return FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.READ);
+            return FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
         } catch(IOException e) {
             throw new CacheException(e.getMessage(), e.getCause());
         } 
     }
 
-    FileChannel getCacheEntry(CacheEntry entry) throws CacheException {
-        Path path = cache.get(entry);
+    FileChannel getCacheFileChannel(CacheEntry entry) throws CacheException {
+        Objects.requireNonNull(entry);
+        Path path = cache.get(entry);        
         if(path == null) {
             throw new CacheException("Ressource not found");
         }
@@ -64,5 +67,16 @@ public class Cache {
         } catch(IOException e) {
             throw new CacheException(e.getMessage(), e.getCause());
         }
+    }
+    
+    CacheEntry getCacheEntry(URI uri) throws CacheException {
+        Set<CacheEntry> entries = cache.keySet();
+        for(CacheEntry e: entries) {
+            if(e.getUri().equals(uri)) {
+                return e;
+            }
+        }
+        throw new CacheException("Entry does not exist in cache");
+    }
 }
 

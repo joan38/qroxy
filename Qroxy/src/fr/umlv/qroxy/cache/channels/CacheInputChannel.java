@@ -29,8 +29,8 @@ import java.nio.file.StandardOpenOption;
 public class CacheInputChannel implements Closeable, AutoCloseable {
     private final FileChannel cacheFileChannel;
 
-    CacheInputChannel(Path cachePath) throws IOException {
-        this.cacheFileChannel = FileChannel.open(cachePath, StandardOpenOption.READ);
+    CacheInputChannel(FileChannel cacheFileChannel) throws IOException {
+        this.cacheFileChannel = cacheFileChannel;
     }
 
     public int read(ByteBuffer src) throws IOException {
