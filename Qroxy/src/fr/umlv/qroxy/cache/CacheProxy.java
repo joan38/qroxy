@@ -28,8 +28,9 @@ import java.nio.channels.FileChannel;
 import java.util.Objects;
 
 /**
- *
- * @author Guillaume
+ * Proxy to access the cache. There are made the validations necessary before
+ * asking an insertion or a deletion in the cache.
+ * @author gdemurge
  */
 public class CacheProxy implements CacheAccess {
     private final ExpirationModel expirationModel = new ExpirationModel();
@@ -57,18 +58,33 @@ public class CacheProxy implements CacheAccess {
         Objects.requireNonNull(uri);
         return outputChannelFactory.createOutputChannel(this, uri);
     }
-
+    
     @Override
     public boolean corruptCachedResource(CacheInputChannel resource) {
         Objects.requireNonNull(resource);
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    /**
+     * Test if a resource can be stored in cache. 
+     * Note: it is made just by regarding the expiration value for the moment.
+     * More test can be added in order to deal with more cases.
+     * @param responseHeader
+     * @return the result of the test
+     */
     private boolean isValid(HttpResponseHeader responseHeader) {
         Objects.requireNonNull(responseHeader);
         return expirationModel.isExpired(responseHeader);
     }
 
+    /**
+     * Test if a resource can be cached by regarding its header and ask the 
+     * cache add a new entry if it is valid.
+     * @param responseHeader
+     * @param uri
+     * @return the file channel to write the new resource in cache
+     * @throws CacheException 
+     */
     public FileChannel add(HttpResponseHeader responseHeader, URI uri) throws CacheException {
         Objects.requireNonNull(responseHeader);
         Objects.requireNonNull(uri);
@@ -78,6 +94,14 @@ public class CacheProxy implements CacheAccess {
         return cache.addCacheEntry(cacheEntryFactory.createCacheEntry(responseHeader, uri));
     }
 
+    /**
+     * Check if for a given request, the matched resource in cache can be
+     * returned.
+     * Note: It has not been implemented yet
+     * @param requestHeader
+     * @param cacheheader
+     * @return the result of the test
+     */
     private boolean checkIfCacheResourceMatchRequest(HttpRequestHeader requestHeader, HttpResponseHeader cacheheader) {
         return true;
     }

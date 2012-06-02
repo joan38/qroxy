@@ -20,14 +20,22 @@ import fr.umlv.qroxy.http.HttpResponseHeader;
 import java.net.URI;
 
 /**
- *
- * @author Guillaume
+ * Represents a cache entry. The cache entry is intended to store all data
+ * related to a given cached ressource.
+ * @author gdemurge
  */
 class CacheEntry {
     private final HttpResponseHeader header;
     private final URI uri;
     
-    public CacheEntry(HttpResponseHeader header, URI uri) {
+    /**
+     * Constructor.
+     * Package visibility to ensure nothing can instanciate it outdoor the 
+     * cache package.
+     * @param header
+     * @param uri 
+     */
+    CacheEntry(HttpResponseHeader header, URI uri) {
         this.header = header;
         this.uri = uri;
     }
@@ -35,7 +43,7 @@ class CacheEntry {
     public URI getUri() {
         return uri;
     }
-    
+   
     public HttpResponseHeader getHeader() {
         return header;
     }
