@@ -23,9 +23,11 @@ import fr.umlv.qroxy.cache.channels.CacheOutputChannelFactory;
 import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
-import java.io.IOException;
+
 import java.net.URI;
+
 import java.nio.channels.FileChannel;
+
 import java.util.Objects;
 
 /**
@@ -33,7 +35,6 @@ import java.util.Objects;
  * @author Guillaume
  */
 public class CacheProxy implements CacheAccess {
-    private final CacheInputControler cacheInputControler = new CacheInputControler();
     private final ExpirationModel expirationModel = new ExpirationModel();
     private final CacheInputChannelFactory inputChannelFactory = new CacheInputChannelFactory();
     private final CacheOutputChannelFactory outputChannelFactory = new CacheOutputChannelFactory();
@@ -68,9 +69,7 @@ public class CacheProxy implements CacheAccess {
 
     private boolean isValid(HttpResponseHeader responseHeader) {
         Objects.requireNonNull(responseHeader);
-        boolean valid = cacheInputControler.isCacheable(responseHeader);
-        valid = expirationModel.isExpired(responseHeader);
-        return valid;
+        return expirationModel.isExpired(responseHeader);
     }
 
     public FileChannel add(HttpResponseHeader responseHeader, URI uri) throws CacheException {
@@ -83,6 +82,6 @@ public class CacheProxy implements CacheAccess {
     }
 
     private boolean checkIfCacheResourceMatchRequest(HttpRequestHeader requestHeader, HttpResponseHeader cacheheader) {
-        
+        return true;
     }
 }
