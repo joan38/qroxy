@@ -19,10 +19,15 @@ package fr.umlv.qroxy.cache.channels;
 import java.nio.channels.FileChannel;
 
 /**
- *
- * @author Guillaume
+ * Factory to create CacheInputChannel instances.
+ * @author gdemurge
  */
 public class CacheInputChannelFactory {
+    /**
+     * Returns the CacheInputChannel instance initialized with the given FileChannel.
+     * @param fileChannel
+     * @return CacheInputChannel instance
+     */
     public CacheInputChannel createCacheInputeChannel(FileChannel fileChannel) {
         return new CacheInputChannel(fileChannel);
     }
