@@ -23,18 +23,12 @@ package fr.umlv.qroxy.config;
 public class CacheRule {
 
     private final int maxSize;
-    private final int maxRessourceSize;
     
-    public CacheRule(int maxSize, int maxRessourceSize) {
+    public CacheRule(int maxSize) {
         this.maxSize = maxSize;
-        this.maxRessourceSize = maxRessourceSize;
     }
 
     public int getMaxSize() {
         return maxSize;
-    }
-    
-    public int getMaxRessourceSize() {
-        return maxRessourceSize;
     }
 }
