@@ -39,9 +39,8 @@ public class Cache {
         this.config = config;
     }
     
-    public void addCacheEntry(HttpResponseHeader responseHeader, URI uri) {
+    public void addCacheEntry(CacheEntry entry) {
         String path = config.getCachePath();
-        CacheEntry entry = new CacheEntry(responseHeader, uri);
         File f = cache.remove(entry);
         f = new File(path);
         cache.put(entry, f);
@@ -56,10 +55,6 @@ public class Cache {
             return null;
         }
     }*/
-
-    void put(HttpResponseHeader responseHeader) {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
 
     File getCacheEntry(CacheEntry entry) throws CacheException {
         File f = cache.get(entry);

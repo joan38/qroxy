@@ -53,7 +53,7 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
                 // Ok it's cachable
                 cachable = true;
                 // http://docs.oracle.com/javase/7/docs/api/java/nio/file/StandardOpenOption.html
-                path = ?;
+                // path = ?;
                 cacheFileChannel = FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE, StandardOpenOption.READ);
             } catch (HttpMalformedHeaderException e) {
                 if (data.contains("\r\n\r\n")) {

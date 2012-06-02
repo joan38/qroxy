@@ -24,7 +24,7 @@ import java.io.FileNotFoundException;
  * @author Guillaume
  */
 class CacheOutputChannelFactory {
-    public CacheOutputChannel createOutputChannel(File file) throws FileNotFoundException {
-        return new CacheOutputChannel(file);
+    public CacheOutputChannel createOutputChannel() throws FileNotFoundException {
+        return new CacheOutputChannel();
     }
 }
