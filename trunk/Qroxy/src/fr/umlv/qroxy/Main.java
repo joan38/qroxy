@@ -16,9 +16,10 @@
  */
 package fr.umlv.qroxy;
 
+import fr.umlv.qroxy.cache.CacheTmpImpl;
 import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.config.XMLQroxyConfigException;
-import fr.umlv.qroxy.proxy.QroxyServer;
+import fr.umlv.qroxy.proxy.Proxy;
 import gnu.getopt.Getopt;
 import gnu.getopt.LongOpt;
 import java.io.File;
@@ -31,25 +32,23 @@ import java.net.SocketAddress;
  * @author joan
  */
 public class Main {
+    
+    public static final String APPLICATION_NAME = "Qroxy";
 
     public static void main(String[] args) {
-        Config config = null;
+        File configFile = null;
 
         LongOpt[] longopts = new LongOpt[3];
         longopts[0] = new LongOpt("config", LongOpt.REQUIRED_ARGUMENT, null, 'c');
 
-        Getopt getopt = new Getopt("Qroxy", args, ":c:", longopts);
+        Getopt getopt = new Getopt(APPLICATION_NAME, args, ":c:", longopts);
 
         int c;
         while ((c = getopt.getopt()) != -1) {
             String arg = getopt.getOptarg();
             switch (c) {
                 case 'c':
-                    try {
-                        config = Config.loadFromXml(new File(arg));
-                    } catch (XMLQroxyConfigException e) {
-                        System.err.println(e.getMessage());
-                    }
+                    configFile = new File(arg);
                     break;
                 case ':':
                     System.out.println("You need an argument for option " + (char) getopt.getOptopt());
@@ -59,11 +58,11 @@ public class Main {
             }
         }
 
-        if (config == null || getopt.getOptind() == args.length) {
+        if (configFile == null || getopt.getOptind() == args.length) {
             printUsage();
         }
 
-        SocketAddress listeningAddress = null;
+        InetSocketAddress listeningAddress = null;
         String hostPort = args[getopt.getOptind()];
 
         try {
@@ -77,8 +76,16 @@ public class Main {
             System.err.println("Please give a number for the port !\n");
             printUsage();
         }
+
+        Config config = new Config(listeningAddress, null, null, 0, null);
         try {
-            new QroxyServer(listeningAddress, config).launch();
+            config.loadFromXml(configFile);
+        } catch (XMLQroxyConfigException e) {
+            System.err.println("Configuration file malformated: " + e.getMessage());
+        }
+
+        try {
+            new Proxy(config, new CacheTmpImpl()).launch();
         } catch (IOException e) {
             System.err.println("Proxy stopped due to a network error: " + e.getMessage());
         }
