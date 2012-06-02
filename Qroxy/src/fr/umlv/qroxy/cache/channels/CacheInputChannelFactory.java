@@ -16,15 +16,15 @@
  */
 package fr.umlv.qroxy.cache;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Path;
 
 /**
  *
  * @author Guillaume
  */
 class CacheInputChannelFactory {
-    public CacheInputChannel createCacheInputeChannel(File file) throws FileNotFoundException {
-        return new CacheInputChannel(file);
+    public CacheInputChannel createCacheInputeChannel(Path path) throws IOException {
+        return new CacheInputChannel(path);
     }
 }

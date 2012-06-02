@@ -16,7 +16,6 @@
  */
 package fr.umlv.qroxy.cache;
 
-import fr.umlv.qroxy.http.HttpHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
 import java.net.URI;
 import java.util.ArrayList;
@@ -32,7 +31,7 @@ public class CacheInputControler {
     boolean isCacheable(HttpResponseHeader responseHeader) {
                 String cacheControl = responseHeader.getCacheControl();
         int contentLength = responseHeader.getContentLength();
-        if(contentLength >= Cache.CACHEABLE_RSRC_MAX_SIZE) {
+        if(contentLength >= 0) {
             return false;
         }
         switch(cacheControl) {

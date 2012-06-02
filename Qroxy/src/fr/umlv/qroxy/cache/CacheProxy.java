@@ -20,6 +20,7 @@ import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
 
 /**
@@ -39,28 +40,13 @@ public class CacheProxy implements CacheAccess {
     
     @Override
     public CacheInputChannel getResource(HttpRequestHeader requestHeader) throws CacheException {
-        File f = cache.getCacheEntry(cacheEntryFactory.createCacheEntry(null, requestHeader.getUri()));
         try {
-            return inputChannelFactory.createCacheInputeChannel(f);
-        } catch(FileNotFoundException e) {
+            return inputChannelFactory.createCacheInputeChannel();
+        } catch(IOException e) {
             throw new CacheException(e.getMessage(), e.getCause());
         }
     }
 
-    //@Override
-    public CacheOutputChannel cacheResource(HttpResponseHeader responseHeader, URI uri) throws CacheException {
-        try {
-            boolean cacheable = cacheInputControler.isCacheable(responseHeader);
-            File file;
-            if(!cacheable) {
-                throw new CacheException("Ressource not cacheable");
-            }
-            file = cache.getCacheEntry(new CacheEntry(responseHeader, uri));
-            return outputChannelFactory.createOutputChannel(file);
-        } catch(FileNotFoundException e) {
-            throw new CacheException(e.getMessage(), e.getCause());
-        }
-    }
 
     @Override
     public boolean corruptCachedResource(CacheInputChannel resource) {
