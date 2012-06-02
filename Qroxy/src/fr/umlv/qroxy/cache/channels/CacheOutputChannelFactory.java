@@ -20,10 +20,17 @@ import fr.umlv.qroxy.cache.CacheProxy;
 
 import java.net.URI;
 /**
- *
- * @author Guillaume
+ * Factory to create CacheOutputChannel instances.
+ * @author gdemurge
  */
 public class CacheOutputChannelFactory {
+    /**
+     * Returns a CacheOutputChannel instance initialized with the owning 
+     * CacheProxy instance and the given URI;
+     * @param proxy
+     * @param uri
+     * @return a CacheOutputChannel instance
+     */
     public CacheOutputChannel createOutputChannel(CacheProxy proxy, URI uri) {
         return new CacheOutputChannel(proxy, uri);
     }

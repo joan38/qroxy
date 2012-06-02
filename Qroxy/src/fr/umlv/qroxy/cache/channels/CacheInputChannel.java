@@ -23,8 +23,10 @@ import java.nio.channels.FileChannel;
 
 
 /**
- *
- * @author Joan Goyeau <joan.goyeau@gmail.com>
+ * Represents a connection to the cache in order to read cached data for
+ * the the outdoors environment. It encapsulates a FileChannel to read
+ * from he cache.
+ * @author jgoyau
  */
 public class CacheInputChannel implements Closeable, AutoCloseable {
     private final FileChannel cacheFileChannel;
@@ -33,10 +35,20 @@ public class CacheInputChannel implements Closeable, AutoCloseable {
         this.cacheFileChannel = cacheFileChannel;
     }
 
+    /**
+     * Read data in the channel and store it in the ByteBuffer parsed in argument.
+     * @param src
+     * @return the number of read bytes
+     * @throws IOException 
+     */
     public int read(ByteBuffer src) throws IOException {
         return cacheFileChannel.read(src);
     }
 
+    /**
+     * Test whether or not the channel is open.
+     * @return true if the channel is open, else false 
+     */
     public boolean isOpen() {
         return cacheFileChannel.isOpen();
     }
@@ -46,6 +58,10 @@ public class CacheInputChannel implements Closeable, AutoCloseable {
         cacheFileChannel.close();
     }
 
+    /**
+     * Set the reading pointer to the begin of the channel.
+     * @throws IOException 
+     */
     public void resetPosition() throws IOException {
         cacheFileChannel.position(0);
     }

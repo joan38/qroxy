@@ -31,8 +31,9 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
 /**
- *
- * @author Joan Goyeau <joan.goyeau@gmail.com>
+ * Represents a connection to the cache in order to write a new resource in the
+ * cache.
+ * @author jgoyau
  */
 public class CacheOutputChannel implements Closeable, AutoCloseable {
 
@@ -46,6 +47,14 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
         this.proxy = proxy;
     }
 
+    /**
+     * Write data contained in the ByteBuffer parsed in argument in the cache.
+     * To avoid the storage of the resource while test if it is cacheable, we check
+     * it directly in this method.
+     * @param src
+     * @return the number of written bytes
+     * @throws IOException 
+     */
     public int write(ByteBuffer src) throws IOException {
         if (!cachable) {
             // Check if it's cachable
@@ -64,6 +73,10 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
         return cacheFileChannel.write(src);
     }
 
+    /**
+     * Test wether or not the channel is open.
+     * @return true if it is open, else false
+     */
     public boolean isOpen() {
         return cacheFileChannel.isOpen();
     }
