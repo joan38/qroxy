@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,10 +43,10 @@ public class Cache {
         this.config = config;
     }
     
-    public FileChannel addCacheEntry(CacheEntry entry) {
+    public FileChannel addCacheEntry(CacheEntry entry) throws CacheException {
         Path path = cache.remove(entry);
         
-        cache.put(entry, f);
+        cache.put(entry, Paths.get(entry.getUri()));
         try {
             return FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.READ);
         } catch(IOException e) {
@@ -55,13 +56,13 @@ public class Cache {
 
     FileChannel getCacheEntry(CacheEntry entry) throws CacheException {
         Path path = cache.get(entry);
-        if(f == null) {
+        if(path == null) {
             throw new CacheException("Ressource not found");
         }
         try {
             return FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.READ);
-        } catch {
-            
+        } catch(IOException e) {
+            throw new CacheException(e.getMessage(), e.getCause());
         }
 }
 
