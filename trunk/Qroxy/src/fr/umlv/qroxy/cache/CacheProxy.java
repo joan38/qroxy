@@ -17,17 +17,14 @@
 package fr.umlv.qroxy.cache;
 
 import fr.umlv.qroxy.cache.channels.CacheInputChannel;
-import fr.umlv.qroxy.cache.channels.CacheOutputChannel;
 import fr.umlv.qroxy.cache.channels.CacheInputChannelFactory;
+import fr.umlv.qroxy.cache.channels.CacheOutputChannel;
 import fr.umlv.qroxy.cache.channels.CacheOutputChannelFactory;
 import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
-
 import java.net.URI;
-
 import java.nio.channels.FileChannel;
-
 import java.util.Objects;
 
 /**

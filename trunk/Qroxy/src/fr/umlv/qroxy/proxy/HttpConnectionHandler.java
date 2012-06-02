@@ -60,7 +60,7 @@ public class HttpConnectionHandler implements LinkHandler {
     private CacheOutputChannel cacher;
     private InetSocketAddress currentServerAddress;
     private long nbReadedByte;
-    private int requestHeaderLength;
+    private int currentHeaderLength;
 
     public HttpConnectionHandler(SelectionKey client, CacheAccess cache, CacheExchangingHandler cacheExchangingHandler) {
         this.buffer = ByteBuffer.allocate(Config.MAX_HEADER_LENGTH);
@@ -135,6 +135,7 @@ public class HttpConnectionHandler implements LinkHandler {
                 if (!readResponseHeader()) {
                     return;
                 }
+                clientKey.interestOps(SelectionKey.OP_WRITE);
             }
             readContentFromServer();
         } catch (IOException e) {
@@ -152,13 +153,13 @@ public class HttpConnectionHandler implements LinkHandler {
         buffer.rewind();
         try {
             respondedHeader = HttpResponseHeader.parse(data);
+            currentHeaderLength = data.indexOf("\r\n\r\n") + 4;
             try {
                 cacher = cache.cacheResource(requestedHeader.getUri());
             } catch (CacheException e) {
                 // Not cachable
             }
             clientKey.interestOps(SelectionKey.OP_WRITE);
-            requestHeaderLength = data.indexOf("\r\n\r\n") + 4;
             return true;
         } catch (HttpMalformedHeaderException e) {
             if (data.contains("\r\n\r\n")) {
@@ -171,7 +172,7 @@ public class HttpConnectionHandler implements LinkHandler {
     private void readContentFromServer() {
         switch (respondedHeader.contentTransferMode()) {
             case CONTENT_LENGTH:
-                if (nbReadedByte == requestHeaderLength + requestedHeader.getContentLength()) {
+                if (nbReadedByte >= currentHeaderLength + respondedHeader.getContentLength()) {
                     serverKey.interestOps(0);
                 }
                 break;
@@ -202,6 +203,20 @@ public class HttpConnectionHandler implements LinkHandler {
                 if (!readRequestHeader()) {
                     return;
                 }
+                
+                // Connection
+                try {
+                    cachedResponse = cache.getResource(requestedHeader);
+                    if (cachedResponse != null) {
+                        // Is in local cache
+                        inCache();
+                    } else {
+                        notInCache();
+                    }
+                } catch (CacheException e) {
+                    // Do not use cache
+                    doNotUseCacheForRequest();
+                }
             }
             readContentFromClient();
         } catch (IOException e) {
@@ -215,6 +230,7 @@ public class HttpConnectionHandler implements LinkHandler {
         buffer.rewind();
         try {
             requestedHeader = HttpRequestHeader.parse(data);
+            currentHeaderLength = data.indexOf("\r\n\r\n") + 4;
             return true;
         } catch (HttpUnsupportedVersionException e) {
             sendErrorCode(HttpStatusCode.HTTP_VERSION_NOT_SUPPORTED);
@@ -234,29 +250,15 @@ public class HttpConnectionHandler implements LinkHandler {
     private void readContentFromClient() {
         switch (requestedHeader.contentTransferMode()) {
             case CONTENT_LENGTH:
-                if (nbReadedByte == requestHeaderLength + requestedHeader.getContentLength()) {
+                if (nbReadedByte >= currentHeaderLength + requestedHeader.getContentLength()) {
                     clientKey.interestOps(0);
                 }
-                break;
-            case CONNECTION_CLOSE:
                 break;
             case CHUNKED:
                 // TODO
                 break;
             case NO_CONTENT:
-                // Use cache
-                try {
-                    cachedResponse = cache.getResource(requestedHeader);
-                } catch (CacheException e) {
-                    // Do not use cache
-                    doNotUseCacheForRequest();
-                }
-                if (cachedResponse != null) {
-                    // Is in local cache
-                    inCache();
-                } else {
-                    notInCache();
-                }
+                // Do not set clientKey.interestOps(0); because it depends on cache connection in local
         }
     }
 
@@ -287,8 +289,7 @@ public class HttpConnectionHandler implements LinkHandler {
 
     private void doNotUseCacheForRequest() {
         try {
-            URI uri = requestedHeader.getUri();
-            connectToServer(new InetSocketAddress(uri.getHost(), uri.getPort()));
+            connectToServer(requestedHeader.getUri());
             clientKey.interestOps(0);
         } catch (IOException e) {
             e.printStackTrace();
@@ -355,12 +356,6 @@ public class HttpConnectionHandler implements LinkHandler {
         }
     }
 
-    private void notCachableResponse() {
-    }
-
-    private void notModified() {
-    }
-
     private void connectToServer(InetSocketAddress address) throws IOException {
         if (address.equals(currentServerAddress)) {
             return;
@@ -415,6 +410,7 @@ public class HttpConnectionHandler implements LinkHandler {
             if (clientKey.interestOps() == 0) {
                 // Request sent, now read the response
                 respondedHeader = null;
+                nbReadedByte = 0;
                 serverKey.interestOps(SelectionKey.OP_READ);
             }
         }
@@ -461,7 +457,7 @@ public class HttpConnectionHandler implements LinkHandler {
         cacher = null;
         currentServerAddress = null;
         nbReadedByte = 0;
-        requestHeaderLength = 0;
+        currentHeaderLength = 0;
         clientKey.interestOps(SelectionKey.OP_READ);
         if (serverKey != null) {
             serverKey.interestOps(0);
@@ -482,6 +478,9 @@ public class HttpConnectionHandler implements LinkHandler {
             clientKey.channel().close();
             if (serverKey != null) {
                 serverKey.channel().close();
+            }
+            if (cacher != null) {
+                cacher.close();
             }
         } catch (IOException ex) {
             ex.printStackTrace();
