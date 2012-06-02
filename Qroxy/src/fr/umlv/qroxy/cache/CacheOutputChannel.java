@@ -16,7 +16,6 @@
  */
 package fr.umlv.qroxy.cache;
 
-import fr.umlv.qroxy.config.Config;
 import fr.umlv.qroxy.http.HttpHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
 import fr.umlv.qroxy.http.exceptions.HttpMalformedHeaderException;

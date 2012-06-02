@@ -17,16 +17,12 @@
 package fr.umlv.qroxy.cache;
 
 import fr.umlv.qroxy.config.Config;
-
 import java.io.IOException;
-
 import java.net.URI;
-
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -37,33 +33,34 @@ import java.util.Set;
  * @author Guillaume
  */
 public class Cache {
+
     private final Config config;
     private final Map<CacheEntry, Path> cache = new HashMap<>();
-    
+
     Cache(Config config) {
         this.config = config;
     }
-    
+
     FileChannel addCacheEntry(CacheEntry entry) throws CacheException {
         Objects.requireNonNull(entry);
         Path path = cache.remove(entry);
         cache.put(entry, Paths.get(entry.getUri()));
         try {
             return FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new CacheException(e.getMessage(), e.getCause());
-        } 
+        }
     }
 
     FileChannel getCacheFileChannel(CacheEntry entry) throws CacheException {
         Objects.requireNonNull(entry);
         Path path = cache.get(entry);        
-        if(path == null) {
+        if (path == null) {
             throw new CacheException("Ressource not found");
         }
         try {
             return FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.READ);
-        } catch(IOException e) {
+        } catch (IOException e) {
             throw new CacheException(e.getMessage(), e.getCause());
         }
     }
