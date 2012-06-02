@@ -16,6 +16,8 @@
  */
 package fr.umlv.qroxy.cache;
 
+import fr.umlv.qroxy.cache.channels.CacheInputChannel;
+import fr.umlv.qroxy.cache.channels.CacheOutputChannel;
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import java.net.URI;
 
