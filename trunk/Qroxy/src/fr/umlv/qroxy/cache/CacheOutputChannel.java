@@ -72,23 +72,6 @@ public class CacheOutputChannel implements Closeable, AutoCloseable {
 
     @Override
     public void close() throws IOException {
-        // Check if the resource writed successfully
-        try {
-            ByteBuffer buffer = ByteBuffer.allocate(Config.MAX_HEADER_LENGTH);
-            cacheFileChannel.read(buffer);
-            HttpResponseHeader responseHeader = HttpResponseHeader.parse(HttpHeader.DECODER.decode(buffer).toString());
-
-            // Preconditions
-            if (responseHeader.getHeaderLength() + responseHeader.getContentLength() != cacheFileChannel.size()) {
-                throw new CacheException("Writted resource length doesn't equals to the length of the HTTP header");
-            }
-            if (responseHeader.getLocation() == null) {
-                throw new CacheException("Location header field is required");
-            }
-        } catch (IOException e) {
-            cacheFileChannel.close();
-            path.toFile().delete();
-            throw new CacheException("Resource not cached because of a corrupt writing", e);
-        }
+        cacheFileChannel.close();
     }
 }
