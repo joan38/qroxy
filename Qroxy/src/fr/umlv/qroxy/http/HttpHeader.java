@@ -85,12 +85,7 @@ public abstract class HttpHeader {
      */
     protected HashMap<String, String> extensionHeader = new HashMap<>();
 
-    protected HttpHeader(String stringHeader) throws HttpMalformedHeaderException {
-        // Cut the message body
-        int endOfHeader = stringHeader.indexOf("\r\n\r\n");
-        if (endOfHeader == -1) {
-            throw new HttpMalformedHeaderException("No HTTP header reconised");
-        }
+    protected HttpHeader() {
     }
 
     public static HttpHeader parse(String httpMessage) throws HttpMalformedHeaderException {
