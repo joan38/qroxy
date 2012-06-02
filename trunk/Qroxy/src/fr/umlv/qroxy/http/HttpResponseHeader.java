@@ -60,8 +60,7 @@ public class HttpResponseHeader extends HttpHeader {
     protected String vary;
     protected String wwwAuthenticate;
 
-    private HttpResponseHeader(String stringHeader) throws HttpMalformedHeaderException {
-        super(stringHeader);
+    private HttpResponseHeader() {
     }
 
     /**
@@ -73,8 +72,15 @@ public class HttpResponseHeader extends HttpHeader {
      */
     public static HttpResponseHeader parse(String httpResponseMessage) throws HttpMalformedHeaderException {
         Objects.requireNonNull(httpResponseMessage);
-        HttpResponseHeader httpHeader = new HttpResponseHeader(httpResponseMessage);
-        StringTokenizer stringTokenizer = new StringTokenizer(httpResponseMessage);
+        HttpResponseHeader httpHeader = new HttpResponseHeader();
+        
+        // Cut the message body
+        int endOfHeader = httpResponseMessage.indexOf("\r\n\r\n");
+        if (endOfHeader == -1) {
+            throw new HttpMalformedHeaderException("No HTTP header reconised");
+        }
+        
+        StringTokenizer stringTokenizer = new StringTokenizer(httpResponseMessage.substring(0, endOfHeader));
 
         // Status-Line (see section 6.1 in RFC 2616)
         try {
@@ -162,6 +168,18 @@ public class HttpResponseHeader extends HttpHeader {
             default:
                 return false;
         }
+    }
+    
+    public static HttpResponseHeader getOwnResponse(HttpResponseHeader responseHeader) {
+        HttpResponseHeader ownResponse = new HttpResponseHeader();
+        ownResponse.version = HttpVersion.HTTP_1_1;
+        ownResponse.statusCode = HttpStatusCode.OWN;
+        ownResponse.location = responseHeader.getLocation();
+        ownResponse.eTag = responseHeader.getETag();
+        ownResponse.date = responseHeader.getDate();
+        ownResponse.expires = responseHeader.getExpires();
+        
+        return ownResponse;
     }
 
     @Override

@@ -65,8 +65,7 @@ public class HttpRequestHeader extends HttpHeader {
     protected String te;
     protected String userAgent;
 
-    private HttpRequestHeader(String stringHeader) throws HttpMalformedHeaderException {
-        super(stringHeader);
+    private HttpRequestHeader() {
     }
     
     /**
@@ -78,8 +77,15 @@ public class HttpRequestHeader extends HttpHeader {
      */
     public static HttpRequestHeader parse(String httpRequestMessage) throws HttpMalformedHeaderException {
         Objects.requireNonNull(httpRequestMessage);
-        HttpRequestHeader httpHeader = new HttpRequestHeader(httpRequestMessage);
-        StringTokenizer stringTokenizer = new StringTokenizer(httpRequestMessage);
+        HttpRequestHeader httpHeader = new HttpRequestHeader();
+        
+        // Cut the message body
+        int endOfHeader = httpRequestMessage.indexOf("\r\n\r\n");
+        if (endOfHeader == -1) {
+            throw new HttpMalformedHeaderException("No HTTP header reconised");
+        }
+        
+        StringTokenizer stringTokenizer = new StringTokenizer(httpRequestMessage.substring(0, endOfHeader));
 
         // Request-Line (see section 5.1 in RFC 2616)
         try {
@@ -375,6 +381,15 @@ public class HttpRequestHeader extends HttpHeader {
             }
         }
         return true;
+    }
+    
+    public static HttpRequestHeader getWhoHasRequest(URI resource) {
+        HttpRequestHeader whohasRequest = new HttpRequestHeader();
+        whohasRequest.method = HttpMethod.WHOHAS;
+        whohasRequest.uri = resource;
+        whohasRequest.version = HttpVersion.HTTP_1_1;
+        
+        return whohasRequest;
     }
 
     public Category matchesCatagories(ArrayList<Category> categories) {
