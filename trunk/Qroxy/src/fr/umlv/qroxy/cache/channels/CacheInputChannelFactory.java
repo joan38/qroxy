@@ -23,7 +23,7 @@ import java.nio.file.Path;
  *
  * @author Guillaume
  */
-class CacheInputChannelFactory {
+public class CacheInputChannelFactory {
     public CacheInputChannel createCacheInputeChannel(Path path) throws IOException {
         return new CacheInputChannel(path);
     }

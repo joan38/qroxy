@@ -22,7 +22,11 @@ import fr.umlv.qroxy.http.HttpResponseHeader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.channels.FileChannel;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,25 +36,32 @@ import java.util.Map;
  */
 public class Cache {
     private final Config config;
-    private final Map<CacheEntry, File> cache = new HashMap<>();
+    private final Map<CacheEntry, Path> cache = new HashMap<>();
     
     public Cache(Config config) {
         this.config = config;
     }
     
-    public void addCacheEntry(CacheEntry entry) {
-        String path = config.getCachePath();
-        File f = cache.remove(entry);
-        f = new File(path);
+    public FileChannel addCacheEntry(CacheEntry entry) {
+        Path path = cache.remove(entry);
+        
         cache.put(entry, f);
+        try {
+            return FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.READ);
+        } catch(IOException e) {
+            throw new CacheException(e.getMessage(), e.getCause());
+        } 
     }
 
-    File getCacheEntry(CacheEntry entry) throws CacheException {
-        File f = cache.get(entry);
+    FileChannel getCacheEntry(CacheEntry entry) throws CacheException {
+        Path path = cache.get(entry);
         if(f == null) {
             throw new CacheException("Ressource not found");
         }
-        return f;
-    }
+        try {
+            return FileChannel.open(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.READ);
+        } catch {
+            
+        }
 }
 

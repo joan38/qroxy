@@ -14,17 +14,15 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package fr.umlv.qroxy.cache;
+package fr.umlv.qroxy.cache.channels;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-
+import fr.umlv.qroxy.cache.CacheProxy;
 /**
  *
  * @author Guillaume
  */
-class CacheOutputChannelFactory {
-    public CacheOutputChannel createOutputChannel() throws FileNotFoundException {
-        return new CacheOutputChannel();
+public class CacheOutputChannelFactory {
+    public CacheOutputChannel createOutputChannel(CacheProxy proxy) {
+        return new CacheOutputChannel(proxy);
     }
 }
