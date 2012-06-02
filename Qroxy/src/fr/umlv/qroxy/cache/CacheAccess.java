@@ -17,9 +17,7 @@
 package fr.umlv.qroxy.cache;
 
 import fr.umlv.qroxy.http.HttpRequestHeader;
-import fr.umlv.qroxy.http.HttpResponseHeader;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.net.URI;
 
 /**
  *
@@ -43,7 +41,7 @@ public interface CacheAccess {
      * @return The FileOutputStream were to cache the resource
      * @throws CacheException If the HttpRequestHeader doesn't match preconditions.
      */
-    public CacheOutputChannel cacheResource() throws CacheException;
+    public CacheOutputChannel cacheResource(URI uri) throws CacheException;
     
     /**
      * Advertise a corrupt resource.
