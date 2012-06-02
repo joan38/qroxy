@@ -313,10 +313,6 @@ public abstract class HttpHeader {
         return fields.toString();
     }
 
-    public int getHeaderLength() {
-        return toString().length();
-    }
-
     public String getAllow() {
         return allow;
     }
