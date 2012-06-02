@@ -34,12 +34,13 @@ import java.util.Set;
 public class Proxy {
 
     private final Config config;
+    private final CacheAccess cache;
     private Selector selector;
-    private CacheAccess cache;
     private CacheExchangingHandler cacheExchangingHandler;
 
-    public Proxy(Config config) {
+    public Proxy(Config config, CacheAccess cache) {
         this.config = config;
+        this.cache = cache;
     }
 
     public void launch() throws IOException {
