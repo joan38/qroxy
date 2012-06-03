@@ -93,8 +93,8 @@ public class Main {
 
     private static void printUsage() {
         System.err.println("Usage :\n"
-                + "--config=<config file> <listening host>:<listening port>\n"
-                + "-c <config file> <listening port>");
+                + "--config=<config file> [listening host:]<listening port>\n"
+                + "-c <config file> [listening host:]<listening port>");
         System.exit(-1);
     }
 }
