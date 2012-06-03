@@ -28,4 +28,6 @@ public interface LinkHandler {
     public void read(SelectionKey key) throws IOException;
 
     public void write(SelectionKey key) throws IOException;
+    
+    public int priority();
 }

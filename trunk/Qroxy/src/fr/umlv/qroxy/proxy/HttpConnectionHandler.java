@@ -140,14 +140,14 @@ public class HttpConnectionHandler implements LinkHandler, Delayed {
             buffer.compact();
             int nbReaded = channel.read(buffer);
             buffer.flip();
-            
+
             if (nbReaded == -1) {
                 channel.shutdownInput();
                 serverKey.interestOps(0);
                 closed = true;
                 return;
             }
-            
+
             //Qos
             if (bytesLeftInSecond != null) {
                 bytesLeftInSecond -= nbReaded;
@@ -590,5 +590,14 @@ public class HttpConnectionHandler implements LinkHandler, Delayed {
     @Override
     public int compareTo(Delayed o) {
         return (getDelay(TimeUnit.NANOSECONDS) < o.getDelay(TimeUnit.NANOSECONDS) ? -1 : 1);
+    }
+
+    @Override
+    public int priority() {
+        try {
+            return requestedHeader.getCategory().getQosRule().getPriority();
+        } catch (NullPointerException e) {
+            return 5;
+        }
     }
 }

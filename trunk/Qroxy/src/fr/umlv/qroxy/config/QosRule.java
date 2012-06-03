@@ -33,8 +33,8 @@ public class QosRule {
         if (minSpeed != null && maxSpeed < 0) {
             throw new IllegalArgumentException("The minSpeed has to be positive");
         }
-        if (priority <= 0) {
-            throw new IllegalArgumentException("The priority has to be higher than 0");
+        if (priority < 1 || priority > 10 ) {
+            throw new IllegalArgumentException("The priority has to be in range [1-10]");
         }
         
         this.minSpeed = minSpeed;

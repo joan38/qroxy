@@ -130,4 +130,9 @@ public class CacheExchangingHandler implements LinkHandler {
     public void cancelWhoHas(URI resource) {
         requestedResources.remove(resource);
     }
+
+    @Override
+    public int priority() {
+        return 10;
+    }
 }
