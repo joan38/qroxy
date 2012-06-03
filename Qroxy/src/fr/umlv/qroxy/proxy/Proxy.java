@@ -78,7 +78,7 @@ public class Proxy {
         cacheExchangingHandler = new CacheExchangingHandler(cache, config);
         cacheExchanger.register(selector, SelectionKey.OP_READ, cacheExchangingHandler);
 
-        while (selector.isOpen()) {
+        for (int i = 0; selector.isOpen(); i = ++i % 10) {
             while (true) {
                 HttpConnectionHandler connection = delayedConnections.poll();
                 if (connection == null) {
@@ -86,7 +86,7 @@ public class Proxy {
                 }
                 connection.resumeConnection();
             }
-
+            
             for (SelectionKey key : selectedKeys) {
                 if (key.isAcceptable()) {
                     doAcceptNewClient(key);
@@ -94,9 +94,9 @@ public class Proxy {
                     doConnectServer(key);
                 } else if (!key.isValid()) {
                     ((HttpConnectionHandler) key.attachment()).close();
-                } else if (key.isReadable()) {
+                } else if (key.isReadable() && ((LinkHandler) key.attachment()).priority() > i) {
                     ((LinkHandler) key.attachment()).read(key);
-                } else if (key.isWritable()) {
+                } else if (key.isWritable() && ((LinkHandler) key.attachment()).priority() > i) {
                     ((LinkHandler) key.attachment()).write(key);
                 }
             }
