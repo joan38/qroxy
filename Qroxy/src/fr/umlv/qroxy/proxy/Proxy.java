@@ -80,6 +80,8 @@ public class Proxy {
         cacheExchanger.register(selector, SelectionKey.OP_READ, cacheExchangingHandler);
 
         for (int i = 0; selector.isOpen(); i = ++i % 10) {
+            selector.select(500);
+            
             while (true) {
                 HttpConnectionHandler connection = delayedConnections.poll();
                 if (connection == null) {
@@ -103,7 +105,6 @@ public class Proxy {
             }
             
             selectedKeys.clear();
-            selector.select(1000);
         }
     }
 
