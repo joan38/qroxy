@@ -24,7 +24,8 @@ import java.net.NetworkInterface;
 import java.net.StandardProtocolFamily;
 import java.net.StandardSocketOptions;
 import java.nio.channels.*;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Set;
 import java.util.concurrent.DelayQueue;
 
 /**
