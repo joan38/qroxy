@@ -105,13 +105,13 @@ public class CacheExchangingHandler implements LinkHandler {
                 // Send OWN on the multicast if in furtur version proxy remember resource owners
                 int nbWrited = channel.send(ByteBuffer.wrap(ownResponse.toString().getBytes(HttpHeader.CHARSET)),
                         new InetSocketAddress(config.getCacheExchangingMulticastAddress(), config.getProxyListeningAddress().getPort()));
-                
+
                 if (nbWrited == 0) {
                     break;
                 }
                 myResources.removeFirst();
             }
-            
+
             if (myResources.isEmpty()) {
                 key.interestOps(SelectionKey.OP_READ);
             }
@@ -122,11 +122,12 @@ public class CacheExchangingHandler implements LinkHandler {
 
     public void sendWhoHas(URI resource, HttpConnectionHandler requester) throws IOException {
         DatagramChannel udpChannel = DatagramChannel.open();
-        udpChannel.send(ByteBuffer.wrap(HttpRequestHeader.getWhoHasRequest(resource).toString().getBytes(HttpHeader.CHARSET)),
-                new InetSocketAddress(config.getCacheExchangingMulticastAddress(), config.getProxyListeningAddress().getPort()));
-        requestedResources.put(resource, requester);
+        if (udpChannel.send(ByteBuffer.wrap(HttpRequestHeader.getWhoHasRequest(resource).toString().getBytes(HttpHeader.CHARSET)),
+                new InetSocketAddress(config.getCacheExchangingMulticastAddress(), config.getProxyListeningAddress().getPort())) > 0) {
+            requestedResources.put(resource, requester);
+        }
     }
-    
+
     public void cancelWhoHas(URI resource) {
         requestedResources.remove(resource);
     }
