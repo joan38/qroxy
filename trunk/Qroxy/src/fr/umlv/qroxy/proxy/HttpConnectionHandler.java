@@ -22,7 +22,6 @@ import fr.umlv.qroxy.cache.channels.CacheInputChannel;
 import fr.umlv.qroxy.cache.channels.CacheOutputChannel;
 import fr.umlv.qroxy.config.Category;
 import fr.umlv.qroxy.config.Config;
-import fr.umlv.qroxy.config.QosRule;
 import fr.umlv.qroxy.http.HttpHeader;
 import fr.umlv.qroxy.http.HttpRequestHeader;
 import fr.umlv.qroxy.http.HttpResponseHeader;
@@ -66,8 +65,8 @@ public class HttpConnectionHandler implements LinkHandler, Delayed {
     private long nbReadedByte;
     private int currentHeaderLength;
     private Integer bytesLeftInSecond;
-    private int clientPausedInterestOps;
-    private int serverPausedInterestOps;
+    private Integer clientPausedInterestOps;
+    private Integer serverPausedInterestOps;
     private long minDate;
 
     public HttpConnectionHandler(SelectionKey client,
@@ -560,28 +559,34 @@ public class HttpConnectionHandler implements LinkHandler, Delayed {
         serverKey.interestOps(0);
     }
 
-    public void resumeConnection() {
-        clientKey.interestOps(clientPausedInterestOps);
-        serverKey.interestOps(serverPausedInterestOps);
+    public void resumeConnection() throws IOException {
+        if (clientPausedInterestOps != null && serverPausedInterestOps != null) {
+            clientKey.interestOps(clientPausedInterestOps);
+            serverKey.interestOps(serverPausedInterestOps);
+            clientPausedInterestOps = null;
+            serverPausedInterestOps = null;
+        } else {
+            throw new IOException("Connection already running");
+        }
     }
 
     @Override
     public long getDelay(TimeUnit unit) {
         switch (unit) {
             case DAYS:
-                return (minDate - System.nanoTime()) / 1000000000000000000l;
+                return (minDate - System.nanoTime() > 0 ? minDate - System.nanoTime() / 1000000000000000000l : 0);
             case HOURS:
-                return (minDate - System.nanoTime()) / 1000000000000000l;
+                return (minDate - System.nanoTime() > 0 ? minDate - System.nanoTime() / 1000000000000000l : 0);
             case MINUTES:
-                return (minDate - System.nanoTime()) / 1000000000000l;
+                return (minDate - System.nanoTime() > 0 ? minDate - System.nanoTime() / 1000000000000l : 0);
             case SECONDS:
-                return (minDate - System.nanoTime()) / 1000000000l;
+                return (minDate - System.nanoTime() > 0 ? minDate - System.nanoTime() / 1000000000l : 0);
             case MILLISECONDS:
-                return (minDate - System.nanoTime()) / 1000000l;
+                return (minDate - System.nanoTime() > 0 ? minDate - System.nanoTime() / 1000000l : 0);
             case MICROSECONDS:
-                return (minDate - System.nanoTime()) / 1000l;
+                return (minDate - System.nanoTime() > 0 ? minDate - System.nanoTime() / 1000l : 0);
             case NANOSECONDS:
-                return minDate - System.nanoTime();
+                return (minDate - System.nanoTime() > 0 ? minDate - System.nanoTime() : 0);
             default:
                 return 0;
         }

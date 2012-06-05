@@ -91,12 +91,12 @@ public class Proxy {
             }
             
             for (SelectionKey key : selectedKeys) {
-                if (key.isAcceptable()) {
+                if (!key.isValid()) {
+                    ((HttpConnectionHandler) key.attachment()).close();
+                } else if (key.isAcceptable()) {
                     doAcceptNewClient(key);
                 } else if (key.isConnectable()) {
                     doConnectServer(key);
-                } else if (!key.isValid()) {
-                    ((HttpConnectionHandler) key.attachment()).close();
                 } else if (key.isReadable() && ((LinkHandler) key.attachment()).priority() > i) {
                     ((LinkHandler) key.attachment()).read(key);
                 } else if (key.isWritable() && ((LinkHandler) key.attachment()).priority() > i) {
