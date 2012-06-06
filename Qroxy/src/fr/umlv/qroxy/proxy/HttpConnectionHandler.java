@@ -273,6 +273,7 @@ public class HttpConnectionHandler implements LinkHandler, Delayed {
                 }
                 // Activate speed limit juste by puting something not null
                 bytesLeftInSecond = 0;
+                System.out.println("Qos activated");
             } catch (NullPointerException e) {
                 // No QosRule
             }
