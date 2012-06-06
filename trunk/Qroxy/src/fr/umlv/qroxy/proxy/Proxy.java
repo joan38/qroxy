@@ -27,6 +27,8 @@ import java.nio.channels.*;
 import java.util.Enumeration;
 import java.util.Set;
 import java.util.concurrent.DelayQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -34,6 +36,7 @@ import java.util.concurrent.DelayQueue;
  */
 public class Proxy {
 
+    public static final Logger LOGGER = Logger.getLogger("Logger");        
     private final Config config;
     private final CacheAccess cache;
     private Selector selector;
@@ -115,7 +118,7 @@ public class Proxy {
             SelectionKey clientKey = client.register(key.selector(), SelectionKey.OP_READ);
             clientKey.attach(new HttpConnectionHandler(clientKey, cache, cacheExchangingHandler, config.getCategories(), this));
         } catch (Exception e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unable to configure new client connection.");
         }
     }
 
@@ -126,7 +129,7 @@ public class Proxy {
                 key.interestOps(SelectionKey.OP_WRITE);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, "Unable to connect to the server.");
             ((HttpConnectionHandler) key.attachment()).close();
         }
     }

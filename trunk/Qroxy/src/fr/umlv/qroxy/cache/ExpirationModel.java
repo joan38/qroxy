@@ -41,23 +41,24 @@ public class ExpirationModel {
      * @return if the cachedResponse is expired or not
      */
     boolean isExpired(HttpResponseHeader cachedResponse) {
-        Date responseExpiration = cachedResponse.getExpires();
-        String cacheControl = cachedResponse.getCacheControl();
-        Date freshnessTime, currentAge;
-        
-        long ageValue = System.currentTimeMillis() - cachedResponse.getDate().getTime();
-        currentAge = new Date(ageValue);
-        
-        String str = "max-age=";
-        if(cacheControl.contains(str)) {
-            freshnessTime = new Date(Long.valueOf(cacheControl.substring(str.length(), cacheControl.length())));
-            return freshnessTime.compareTo(currentAge) > 0;
-        }
-        
-        if(responseExpiration == null) {
-            responseExpiration = new Date(currentTime());
-        }
-        freshnessTime = new Date(responseExpiration.getTime()-cachedResponse.getDate().getTime());
-        return freshnessTime.compareTo(currentAge) > 0;
+//        Date responseExpiration = cachedResponse.getExpires();
+//        String cacheControl = cachedResponse.getCacheControl();
+//        Date freshnessTime, currentAge;
+//        
+//        long ageValue = System.currentTimeMillis() - cachedResponse.getDate().getTime();
+//        currentAge = new Date(ageValue);
+//        
+//        String str = "max-age=";
+//        if(cacheControl.contains(str)) {
+//            freshnessTime = new Date(Long.valueOf(cacheControl.substring(str.length(), cacheControl.length())));
+//            return freshnessTime.compareTo(currentAge) > 0;
+//        }
+//        
+//        if(responseExpiration == null) {
+//            responseExpiration = new Date(currentTime());
+//        }
+//        freshnessTime = new Date(responseExpiration.getTime()-cachedResponse.getDate().getTime());
+//        return freshnessTime.compareTo(currentAge) > 0;
+        return false;
     }
 }

@@ -40,6 +40,7 @@ import java.nio.channels.UnresolvedAddressException;
 import java.util.*;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 /**
  *
@@ -252,7 +253,7 @@ public class HttpConnectionHandler implements LinkHandler, Delayed {
             }
             readContentFromClient();
         } catch (IOException e) {
-            e.printStackTrace();
+            Proxy.LOGGER.log(Level.SEVERE, "Client connection closed.");
             close();
         }
     }
@@ -340,7 +341,7 @@ public class HttpConnectionHandler implements LinkHandler, Delayed {
             connectToServer(requestedHeader.getUri());
             clientKey.interestOps(0);
         } catch (IOException e) {
-            e.printStackTrace();
+            Proxy.LOGGER.log(Level.SEVERE, "Unable to connect to the server.");
             close();
         }
     }
@@ -371,7 +372,7 @@ public class HttpConnectionHandler implements LinkHandler, Delayed {
                 connectToServer(requestedHeader.getUri());
                 clientKey.interestOps(0);
             } catch (IOException ex) {
-                e.printStackTrace();
+                Proxy.LOGGER.log(Level.SEVERE, "Unable to connect to the server.");
                 close();
             }
         }
@@ -394,7 +395,7 @@ public class HttpConnectionHandler implements LinkHandler, Delayed {
                         connectToServer(requestedHeader.getUri());
                         clientKey.interestOps(0);
                     } catch (IOException ex) {
-                        e.printStackTrace();
+                        Proxy.LOGGER.log(Level.SEVERE, "Unable to request neighbor caches.");
                         close();
                     }
                 }
@@ -410,7 +411,7 @@ public class HttpConnectionHandler implements LinkHandler, Delayed {
             connectToServer(requestedHeader.getUri());
             clientKey.interestOps(0);
         } catch (IOException e) {
-            e.printStackTrace();
+            Proxy.LOGGER.log(Level.SEVERE, "Unable to connect to the server.");
             close();
         }
     }
@@ -548,7 +549,7 @@ public class HttpConnectionHandler implements LinkHandler, Delayed {
                 cacher.close();
             }
         } catch (IOException ex) {
-            ex.printStackTrace();
+            Proxy.LOGGER.log(Level.SEVERE, "Unable to close connections.");
         }
     }
 
