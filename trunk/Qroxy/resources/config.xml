@@ -16,13 +16,25 @@
     <categories>
         <!-- The order of categories are important because if several categories
         matches a header, first will be affected -->
-        <category name="test">
+        <category name="Ubuntu">
             <regexs>
                 <regex applyOn="url">.*ubuntu.*</regex>
             </regexs>
             <qosRule>
-                <maxSpeed>10000</maxSpeed><!-- In bytes per second -->
-                <priority>4</priority><!-- In range [1-10], Best priority is 1, lowest is 10. Default is 5 -->
+                <!-- <maxSpeed>10000</maxSpeed> In bytes per second -->
+                <priority>1</priority><!-- In range [1-10], Best priority is 1, lowest is 10. Default is 5 -->
+            </qosRule>
+            <cacheRule>
+                <maxSize>1000</maxSize><!-- In bytes -->
+            </cacheRule>
+        </category>
+        <category name="Fedora">
+            <regexs>
+                <regex applyOn="url">.*fedora.*</regex>
+            </regexs>
+            <qosRule>
+                <!-- <maxSpeed>10000</maxSpeed> In bytes per second -->
+                <priority>10</priority><!-- In range [1-10], Best priority is 1, lowest is 10. Default is 5 -->
             </qosRule>
             <cacheRule>
                 <maxSize>1000</maxSize><!-- In bytes -->
